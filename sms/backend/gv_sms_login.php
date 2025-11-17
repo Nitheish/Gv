@@ -96,7 +96,7 @@
 		$_SESSION['gvky'] = $gvky;
 		$_SESSION['gvid'] = GVstringEncrption("LoadHtmlPage=gv_dashboard");
 		
-		GVLoadPageDirect("../backend/gv_redirect");
+		GVLoadPageDirect("../backend/redirect");
 		exit;
 	}
 	else

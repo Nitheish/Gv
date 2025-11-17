@@ -21,6 +21,7 @@
 				$gv_login_id = GVStringFormat($MyRowData['gv_login_id']);
 				$company_id = GVStringFormat($MyRowData['company_id']);
 				$lasttime = GVStringFormat($MyRowData['lasttime']);
+				$emp_name = GVStringFormat($MyRowData['emp_name']);
 			}
 			MyDbFreeResult($MyDbResult);
 			
@@ -55,7 +56,11 @@
 				{
 					$LOGINPATH = $GLOBALS["LOGINPATH"];
 					include("gv_footer.php");
-					GVLoadPageDirect("../../gvlogin/gv_session_expired.php?".GVqueryString("frmProductLogin=SMS"));
+
+					session_start();
+					$_SESSION['frmProductLogin'] = "SMS";
+
+					GVLoadPageDirect("../../gvlogin/gv_session_expired");
 					exit;
 				}
 			}
@@ -73,6 +78,7 @@
 				
 				$GLOBALS["company_id"] = $company_id;
 				$GLOBALS["gv_username"] = $gv_username;
+				$GLOBALS["gv_empname"] = $emp_name;
 				$GLOBALS["gv_login_id"] = $gv_login_id;
 			}
 		}

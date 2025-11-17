@@ -341,7 +341,7 @@
 	
 	if(!function_exists('GVComboBox'))
 	{
-		function GVComboBox($GVlabel, $GVname, $GVid, $GVcboArr, $GVclass, $GVstyles, $GVother)
+		function GVComboBox($GVlabel, $GVname, $GVid, $GVcboArr, $GVclass, $GVstyles, $GVother,$GVformStyle="")
 		{
 			$GVRadioBtnVal = $GLOBALS[$GVname];
 			
@@ -352,7 +352,7 @@
 			else
 				$GVclass = "custom-select ".$GVclass;
 			
-			echo "<div class='form-group'>";
+			echo "<div class='form-group' style='$GVformStyle'>";
 			
 			if($GVlabel != "INPUT")
 				echo "<label class='MyLabel'>$GVlabel</label>";

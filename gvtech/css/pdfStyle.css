@@ -35,12 +35,12 @@
 
 .table thead th
 {
-	/* //border-bottom:2px solid #ccc; */
+	//border-bottom:2px solid #ccc;
 }
 
 .table td, .table th {
-   /* // border-bottom: 1px solid rgb(222, 226, 230);
-    //border-top: none; */
+   // border-bottom: 1px solid rgb(222, 226, 230);
+    //border-top: none;
 }
 
 .badge-danger

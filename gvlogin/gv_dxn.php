@@ -23,7 +23,7 @@
 	</head>
 	
 	<body style="background-image:-webkit-gradient(linear,left top,right top ,from(#006699),to(#33bbff)) !important;">
-	<form action="<?echo '/sms/backend/gv_sms_login'; ?>" method="post" autocomplete="off">
+	<form action="<?echo '/dxn/backend/gv_dxn_login.php'; ?>" method="post" autocomplete="off">
 		
 		<nav class="navbar navbar-expand-lg navbar-dark bg-dark fixed-top" id="GvNav" style='z-index:0;background:#f2f2f2 !important;box-shadow: 0 2px 5px 0 rgba(0,0,0,0.16),0 2px 10px 0 rgba(0,0,0,0.75);'>
 			<a class="navbar-brand"><img src='<? echo "/gvtech/images/gvlogo1.png";?>' style="width:40px;height:35px;"></a>
@@ -55,7 +55,7 @@
 			<div class="row">
 				<div class="col-lg-8 col-md-8 col-sm-8 col-xs-12 text-center GVLoginHeading">
 					<h1>Welcome to GV Techno Sys</h1><br>
-					<h3>Stock Management System</h3><br>
+					<h3>DXN - Stock Management System</h3><br>
 					<h4>We deliver simple, scalable, and flexible solutions designed to streamline daily stock management operations.<h4>
 				</div>
 				

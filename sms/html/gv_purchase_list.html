@@ -6,14 +6,23 @@
 	<?
 		include("page_header.html");
 		
-		if($txtSortName == "")
+		$sortMethodArr = array();
+		$sortMethodArr[] = "purchase_date";
+		$sortMethodArr[] = "purchase_id";
+		$sortMethodArr[] = "purchase_type";
+		$sortMethodArr[] = "tot_qty";
+		$sortMethodArr[] = "overall_amount";
+		$sortMethodArr[] = "paid_amt";
+		$sortMethodArr[] = "balance_due";
+		$sortMethodArr[] = "status";
+
+		if($txtSortName == "" || !in_array($txtSortName,$sortMethodArr))
 			$txtSortName = "purchase_id";
 		
 		if($txtSortMethod == "" || !in_array($txtSortMethod,$GV_sortingArr))
 			$txtSortMethod = "desc";
 		
-		if($GVorderBy == "")
-			$GVorderBy = $txtSortName." ".$txtSortMethod;
+		$GVorderBy = $txtSortName." ".$txtSortMethod;
 		
 		$customerCodeArr = array();
 		$customerArr = array();

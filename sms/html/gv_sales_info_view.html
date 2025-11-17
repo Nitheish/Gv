@@ -265,8 +265,8 @@
 									echo "</td>";
 									
 									echo "<td class='GVtableData text-center'>";
-									echo GVimage("GVedit","GVedit","/gvtech/images/edit.png","","cursor:pointer;","width='15' title='Edit' onclick='GVpopupCall(\"$editLink\",\"$GV_PopupSSDATA\",700,400);'");
-									echo GVimage("GVdel","GVdel","/gvtech/images/delete.png","","margin-left:7px;cursor:pointer;","width='15' title='Delete' onclick=GVpopupCall('$DelLink','$GV_PopupSSDATA',400,150);");
+									echo GVimage("GVedit","GVedit","/gvtech/images/edit.png","","cursor:pointer;","width='15' title='Edit' onclick='setGVPopupSession(\"$editLink\",\"$GV_PopupSSDATA\",700,400);'");
+									echo GVimage("GVdel","GVdel","/gvtech/images/delete.png","","margin-left:7px;cursor:pointer;","width='15' title='Delete' onclick=setGVPopupSession('$DelLink','$GV_PopupSSDATA',400,150);");
 									echo "</td>";
 								echo "</tr>";
 								

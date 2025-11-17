@@ -23,8 +23,7 @@
 		if($txtSortMethod == "" || !in_array($txtSortMethod,$GV_sortingArr))
 			$txtSortMethod = "desc";
 		
-		if($GVorderBy == "")
-			$GVorderBy = $txtSortName." ".$txtSortMethod;
+		$GVorderBy = $txtSortName." ".$txtSortMethod;
 		
 		$customerCodeArr = array();
 		$customerArr = array();

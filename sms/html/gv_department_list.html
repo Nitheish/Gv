@@ -8,38 +8,34 @@
 		include("../info/gv_setting_info.php"); 
 		include("gv_submenu.html");
 		
-		
-		
 		$sortMethodArr = array();
 		$sortMethodArr[] = "department_id";
 		$sortMethodArr[] = "department_code";
 		$sortMethodArr[] = "department_name";
 		
-		if ($txtSortName == "" || !in_array($txtSortName, $sortMethodArr)) {
+		if ($txtSortName == "" || !in_array($txtSortName, $sortMethodArr))
 			$txtSortName = "department_id";
-		}
 
-		if ($txtSortMethod == "" || !in_array($txtSortMethod, $GV_sortingArr)) {
+		if ($txtSortMethod == "" || !in_array($txtSortMethod, $GV_sortingArr))
 			$txtSortMethod = "desc";
-		}
-
-		$GVorderBy = $txtSortName . " " . $txtSortMethod;
+		
+		$GVorderBy = $txtSortName. " ".$txtSortMethod;
 
 		$page_name = "gv_department_list";
 
-		if ($GVSaveBtn == "SEARCH" || $GVSaveBtn == "RESET") {
+		if ($GVSaveBtn == "SEARCH" || $GVSaveBtn == "RESET") 
+		{
 			$currentPage = 1;
 			$startRecord = 0;
 		}
 
-		
 		$serachOptArr = array();
 		$serachOptArr["NAME"] = "Department Name";
 		$serachOptArr["CODE"] = "Department No";
 
-		if ($cboSearchOpt == "") $cboSearchOpt = "NAME";
+		if ($cboSearchOpt == "") 
+			$cboSearchOpt = "NAME";
 
-	
 		$pagePerRecordArr = array();
 		$pagePerRecordArr[10] = 10;
 		$pagePerRecordArr[25] = 25;
@@ -50,41 +46,32 @@
 		$FILTER_ARR["txtSearchStr"] = $txtSearchStr;
 		include("../backend/gv_filter_info.php"); 
 		$GVPaginationInd = 1;
-
 		
-		$MySelectQry  = "SELECT dept.*, COUNT(dept.department_id) OVER() AS totCnt ";
-		$MySelectQry .= "FROM department_info dept ";
-		$MySelectQry .= "WHERE dept.company_id=? ";
-		MYSQL_BuildArray("company_id", $company_id, "s");
-		$MySelectQry .= "AND dept.delete_ind=? ";
-		MYSQL_BuildArray("delete_ind", "0", "s");
-
+		$MySelectQry  = "SELECT dept.*, COUNT(dept.department_id) OVER() AS totCnt";
+		$MySelectQry .= " FROM department_info dept WHERE ";
+		$MySelectQry .= " dept.company_id=?";MYSQL_BuildArray("company_id", $company_id, "s");
+		$MySelectQry .= " AND dept.delete_ind=?";MYSQL_BuildArray("delete_ind", "0", "s");
 		
-		if ($cboSearchOpt == "NAME" && strlen($txtSearchStr) > 0) {
-			$MySelectQry .= " AND dept.department_name LIKE CONCAT('%', ?, '%')";
-			MYSQL_BuildArray("department_name", $txtSearchStr, "s");
+		if ($cboSearchOpt == "NAME" && strlen($txtSearchStr) > 0) 
+		{
+			$MySelectQry .= " AND dept.department_name LIKE CONCAT('%', ?, '%')";MYSQL_BuildArray("department_name", $txtSearchStr, "s");
 		} 
-		else if ($cboSearchOpt == "CODE" && strlen($txtSearchStr) > 0) {
-			$MySelectQry .= " AND dept.department_code=?";
-			MYSQL_BuildArray("department_code", strtoupper($txtSearchStr), "s");
+		else if ($cboSearchOpt == "CODE" && strlen($txtSearchStr) > 0) 
+		{
+			$MySelectQry .= " AND dept.department_code=?";MYSQL_BuildArray("department_code", strtoupper($txtSearchStr), "s");
 		}
-
 		
 		$MySelectQry .= " ORDER BY $GVorderBy LIMIT $numRecordPerPage OFFSET $startRecord";
-
-		// ✅ Execute query
 		$MyDbResult = MyDbQuery($MySelectQry, $_GVParamArray);
 		$MyNumRows  = MyDbNumRows($MyDbResult);
 		$MyRowData  = mysqli_fetch_array($MyDbResult, MYSQLI_ASSOC);
 		$totNumRecord = GVStringFormat($MyRowData['totCnt']);
-		
 	?>
 	<div class="container-fluid">
-		<div class="row" style='padding:12px 7px 0px 0px;'>
-			<div class="col-lg-4 col-md-4 col-sm-4 col-xs-4">
+		<div class="row" style='padding:15px 7px 0px 0px;'>
+			<div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
 				<label class="MyTextHeading"><i class='fa fa-cubes'></i><span>Department Details List</span></label>
 			</div>
-			
 		</div>
 		
 		<div class='GVSearchBar'>
@@ -100,9 +87,6 @@
 			GVComboBox("INPUT","numRecordPerPage","numRecordPerPage",$pagePerRecordArr,"","margin-left: 5px;width:50px;","onchange='GVPagePerRecord_onchange();'"); 
 			echo "<label class='MyLabelText text-left' style='margin:3px;margin-left: 2px;'>Records</label>";
 			
-			$pdfLink = "../backend/gv_page_redirect.php?SkipSSDataInd=1".GVqueryString("LoadHtmlPage=gv_settings_pdf_export&GVmenu=$GVmenu&GVsubMenu=$GVsubMenu&cboSearchOpt=$cboSearchOpt&txtSearchStr=$txtSearchStr&GVorderBy=$GVorderBy&cbodepartmentOption=$cbodepartmentOption&cboListOption=$cboListOption");
-			GVanchor("GVPdf","GVPdf","$pdfLink","",GVimage("GVPdf","GVPdf","/gvtech/images/pdf.png","","cursor:pointer;float:right;margin-left: auto;width:27px;height:27px;margin-left:10px;padding:3px;","title='Export to PDF'"),"","");
-								
 			$AddURL = GVstringEncrption("LoadHtmlPage=gv_department_info&GVmenu=$GVmenu&GVsubMenu=$GVsubMenu&GVSTEP=ADD");
 			GVimageButton("ADD NEW","GVloginBtn","GVloginBtn",GVimage("image","image","/gvtech/images/add.png","","","width='15'"),"button","SECONDARY","margin-left:auto;text-align: right;float: right;height:27px;font-size:11px;","onclick='setGVPopupSession(\"$AddURL\",\"$GV_PopupSSDATA\",700,400);'");  
 			?>
@@ -114,7 +98,7 @@
 			<table class="table table-hover GVtableHeadFixed" style='width:100%;margin-top:0px !important;'>
 				<thead>
 					<tr>
-						<th width='4%' class='GVtableHead text-center'>S.No</th>
+						<th width='5%' class='GVtableHead text-center'>S.No</th>
 						<th width='12%' class='GVtableHead text-left'>Department Code<? GVSortMethod("department_id",$txtSortMethod); ?></th>
 						<th width='15%' class='GVtableHead text-left'>Department Name<? GVSortMethod("department_name",$txtSortMethod); ?></th>
 						<th width='15%' class='GVtableHead text-left'>Department Description<? GVSortMethod("department_description",$txtSortMethod); ?></th>
@@ -132,17 +116,12 @@
 						$department_name = GVStringFormat($MyRowData['department_name']);
 						$description = GVStringFormat($MyRowData['description']);
 						
-						
 						$gvCustomDesc = "$department_name ($department_code)";
 						$editLink = GVstringEncrption("LoadHtmlPage=gv_department_info&GVmenu=$GVmenu&GVsubMenu=$GVsubMenu&GVSTEP=EDIT&GVID=$department_id");
 						$DelLink = GVstringEncrption("LoadHtmlPage=gv_department_del&GVSTEP=DELETE&GVID=$department_id&gvCustomDesc=$gvCustomDesc");
 						$infoLink = GVstringEncrption("LoadHtmlPage=gv_department_information&GVmenu=$GVmenu&GVsubMenu=$GVsubMenu&GVID=$department_id");
 						
 						$recCount++;
-						
-						
-						
-							
 						?>
 						
 						<tr>
@@ -157,8 +136,6 @@
 								echo GVimage("GVdel","GVdel","/gvtech/images/delete.png","","margin-left:7px;cursor:pointer;","width='15' title='Delete' onclick=setGVPopupSession('$DelLink','$GV_PopupSSDATA',400,150);");
 							?>
 							</td>
-							
-							
 						</tr>
 						
 					<?
@@ -172,7 +149,7 @@
 		<? } else { ?>
 			<div class="row" style='padding-top:75px;'>
 				<div class="col-lg-12 col-md-12 col-sm-12 col-xs-12 text-center">
-					<? if(strlen($txtSearchStr) > 0 || $cboPdtCategory > 0) { ?>
+					<? if(strlen($txtSearchStr) > 0) { ?>
 					<label class="MyTextWarning"><? echo GVimage("image","image","/gvtech/images/search.png","","","width='50'");  ?><br>No data found Please change the filter</label><br>
 					<? GVInputButton("Reset","GVSaveBtn","GVSaveBtn","button","SECONDARY","","onclick='reset_btnClick();'");?>
 					<? } else if($totNumRecord == 0) { ?>
@@ -206,7 +183,6 @@
 		{
 			$("#cboSearchOpt").val("NAME");
 			$("#txtSearchStr").val("");
-			$("#cboPdtCategory").val("");
 			var _selectedFilter = $("#cboSearchOpt option:selected").text();
 			$("#txtSearchStr").attr("placeholder", _selectedFilter);
 			GVcallLoader();
@@ -214,5 +190,4 @@
 		}
 		
 		cboSearchOpt_onchanged('<? echo $cboSearchOpt; ?>');
-		
 	</script>

@@ -3,22 +3,28 @@
 		include_once($GVTECHPATH."/gvfunction/gv_general_function.php");
 		include_once($GVTECHPATH."/gvfunction/gv_design_function.php");
 		include_once($GVTECHPATH."/gvfunction/gv_function.php");
-		GVqueryStringData();
+		
+		session_start();
+		if (isset($_SESSION['frmProductLogin']))
+		{
+			$frmProductLogin = $_SESSION['frmProductLogin'];	
+		}
+		session_destroy();
 		
 		if($frmProductLogin == "DXN")
 		{
 			$titleDesc = "<h1>GV Techno Sys</h1><br><h3>DXN - Stock Management System</h3><br>";
-			$pathRelogin = "/gvlogin/gv_dxn.php";
+			$pathRelogin = "/gvlogin/gv_dxn";
 		}
 		else if($frmProductLogin == "SMS")
 		{
 			$titleDesc = "<h1>GV Techno Sys</h1><br><h3>Stock Management System</h3><br>";
-			$pathRelogin = "/gvlogin/gv_sms.php";
+			$pathRelogin = "/gvlogin/gv_sms";
 		}
 		else
 		{
 			$titleDesc = "GV Finance Management";
-			$pathRelogin = "/gvlogin/gv_finance.php";
+			$pathRelogin = "/gvlogin/gv_finance";
 		}
 	?>
 	

@@ -179,7 +179,7 @@ function setGVPageSession(_recordSSData,_SSDataKey, _LoadType=0)
 				if(response["STATUS"] == "EXPIRED")
 				{
 					GVStopLoader();
-					GVtopDirect("../backend/gv_redirect");  
+					GVtopDirect("../backend/redirect");  
 				}
 				else if(response["STATUS"] == "SUCCESS")
 				{
@@ -188,7 +188,7 @@ function setGVPageSession(_recordSSData,_SSDataKey, _LoadType=0)
 					else if(_LoadType == 1)
 						GViframeDirect("../backend/gv_page_redirect");
 					else	
-						GVtopDirect("../backend/gv_redirect");
+						GVtopDirect("../backend/redirect");
 				}
 				else
 				{

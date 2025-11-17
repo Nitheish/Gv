@@ -117,7 +117,7 @@
 		$totNumRecord = GVStringFormat($MyRowData['totCnt']);
 	?>
 	<div class="container-fluid">
-		<div class="row" style='padding:12px 7px 0px 0px;'>
+		<div class="row" style='padding:15px 7px 0px 0px;'>
 			<div class="col-lg-4 col-md-4 col-sm-4 col-xs-4">
 				<label class="MyTextHeading"><i class='fa fa-cubes'></i><span>Product Details List</span></label>
 			</div>
@@ -215,11 +215,11 @@
 						$recCount++;
 						
 						if($remaining_qty == 0)
-							$product_name .= "<span class='badge badge-danger' style='margin-left:5px;font-size:11px;padding:5px;'>Out of stock</span>";
+							$product_name .= "<span class='badge badge-danger' style='margin-left:5px;font-size:10px;padding:5px;'>Out of stock</span>";
 						else if($alert_ind == 1)
 						{
 							if($remaining_qty <= $qty_count_alert)
-								$product_name .= "<span class='badge badge-warning' style='margin-left:5px;font-size:11px;padding:5px;'>Low stock</span>";
+								$product_name .= "<span class='badge badge-warning' style='margin-left:5px;font-size:10px;padding:5px;'>Low stock</span>";
 						}
 						
 						if($cboListOption == "ASSET")

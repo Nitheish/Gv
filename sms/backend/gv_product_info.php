@@ -13,6 +13,7 @@
 		$txtIntialQty = GVfixedInputText($txtIntialQty);
 		$chkAlertInd = GVfixedInputText($chkAlertInd);
 		$txtAlertQtyLevel = GVfixedInputText($txtAlertQtyLevel);
+		$txtProductCode = GVfixedInputText($txtProductCode);
 		$cboPdtCategory = (int) GVfixedInputText($cboPdtCategory);
 		
 		if($cboPdtCategory == 0)
@@ -20,6 +21,9 @@
 		
 		if(strlen($txtProductName) == 0)
 			GVSetErrorCodes("txtProductName","Please enter the Product Name");
+		
+		if(strlen($txtProductCode) == 0)
+			GVSetErrorCodes("txtProductCode","Please enter the Product code");
 		
 		if(!GVisNumeric($txtsellingAmt))
 		{
@@ -36,19 +40,11 @@
 			{
 				GVSetErrorCodes("txtIntialQtyAmt","Please enter Amount value");
 			}
-			/*else if(round($txtIntialQtyAmt) == 0)
-			{
-				GVSetErrorCodes("txtIntialQtyAmt","Please enter Amount value greater than zero");
-			}*/
 			
 			if(!GVisNumeric($txtIntialQty))
 			{
 				GVSetErrorCodes("txtIntialQty","Please enter numeric value");
 			}
-			/*else if(round($txtIntialQty) == 0)
-			{
-				GVSetErrorCodes("txtIntialQty","Please enter the Initial Quantity value greater than zero");
-			}*/
 		}
 			
 		$MySelectQry = "select product_id from product_info where";
@@ -68,6 +64,24 @@
 		{
 			GVSetErrorCodes("txtProductName","Product name already exists.Please try different one");
 		}
+		
+		$MySelectQry = "select product_id from product_info where";
+		$MySelectQry .= " company_id=?";MYSQL_BuildArray("company_id",$company_id,"s");
+		
+		if($GVSTEP == "EDIT")
+		{
+			$MySelectQry .= " and product_id!=?";MYSQL_BuildArray("product_id",$GVID,"s");
+		}
+		
+		$MySelectQry .= " and product_code=?";MYSQL_BuildArray("product_code",$txtProductCode,"s");
+		$MyDbResult =  MyDbQuery($MySelectQry,$_GVParamArray);	
+		$MyNumRows = MyDbNumRows($MyDbResult);
+		MyDbFreeResult($MyDbResult);
+		
+		if($MyNumRows > 0)
+		{
+			GVSetErrorCodes("txtProductCode","Product code already exists.Please try different one");
+		}
 			
 		if($ErrorInd == 0)
 		{
@@ -77,6 +91,7 @@
 			$txtIntialQty 		= (int)$txtIntialQty;
 			$chkAlertInd 		= (int)$chkAlertInd;
 			$txtAlertQtyLevel 	= (int)$txtAlertQtyLevel;
+      $txtProductCode 	= strtoupper($txtProductCode);
 			
 			if($GVSTEP == "ADD")
 			{
@@ -94,8 +109,9 @@
 				$_GVParamArray[] = array("KEY"=>"buying_amount", "VAL"=>$buying_amount, "TYPE"=>"s");
 				$_GVParamArray[] = array("KEY"=>"alert_ind", "VAL"=>$chkAlertInd, "TYPE"=>"s");
 				$_GVParamArray[] = array("KEY"=>"qty_count_alert", "VAL"=>$txtAlertQtyLevel, "TYPE"=>"s");
+				$_GVParamArray[] = array("KEY"=>"product_code", "VAL"=>$txtProductCode, "TYPE"=>"s");
 				$_GVParamArray[] = array("KEY"=>"pdt_category_id", "VAL"=>$cboPdtCategory, "TYPE"=>"s");
-				
+			
 				$outParamArr = GVgetQueryString($_GVParamArray);
 				
 				$MyInsertQry = "insert into product_info (".$outParamArr['_INSERT_SQLQRY_FIELDS'].") values(".$outParamArr['_INSERT_SQLQRY_VAL'].")";
@@ -111,17 +127,6 @@
 				MyDbFreeResult($MyDbResult);
 				
 				$GVSTEP = "EDIT";
-				
-				$productCode = "PT".$GVID;
-				
-				$_GVParamArray[] = array("KEY"=>"product_code", "VAL"=>$productCode, "TYPE"=>"s");
-			
-				$outParamArr = GVgetQueryString($_GVParamArray);
-				
-				$MyUpdateQry = "update product_info set ".$outParamArr['_UPDATE_SQLQRY_VAL']." where ";
-				$MyUpdateQry .= " company_id=?";MYSQL_BuildArray("company_id",$company_id,"s");
-				$MyUpdateQry .= " and product_id=?";MYSQL_BuildArray("product_id",$GVID,"s");
-				MyDbQuery($MyUpdateQry, $_GVParamArray);
 				
 				$txtAmount = GVformatAmount($txtIntialQty * $txtIntialQtyAmt);
 				
@@ -189,8 +194,9 @@
 				$_GVParamArray[] = array("KEY"=>"sell_amount", "VAL"=>$txtsellingAmt, "TYPE"=>"s");
 				$_GVParamArray[] = array("KEY"=>"alert_ind", "VAL"=>$chkAlertInd, "TYPE"=>"s");
 				$_GVParamArray[] = array("KEY"=>"qty_count_alert", "VAL"=>$txtAlertQtyLevel, "TYPE"=>"s");
+				$_GVParamArray[] = array("KEY"=>"product_code", "VAL"=>$txtProductCode, "TYPE"=>"s");
 				$_GVParamArray[] = array("KEY"=>"pdt_category_id", "VAL"=>$cboPdtCategory, "TYPE"=>"s");
-				
+			
 				$outParamArr = GVgetQueryString($_GVParamArray);
 				
 				$MyUpdateQry = "update product_info set ".$outParamArr['_UPDATE_SQLQRY_VAL']." where ";

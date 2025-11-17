@@ -14,8 +14,7 @@
 	{
 		function GVGETSERVER($getServer)
 		{
-			return $_SERVER[$getServer] ?? null;
+			return $_SERVER[$getServer];
 		}
 	}
-	
 ?>

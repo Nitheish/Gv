@@ -20,7 +20,11 @@
 	session_destroy();
 	
 	$LOGINPATH = $GLOBALS["LOGINPATH"];
+
+	session_start();
+	$_SESSION['frmProductLogin'] = "SMS";
+
 	include("gv_footer.php");
-	GVLoadPageDirect("../../gvlogin/gv_logout.php?".GVqueryString("frmProductLogin=SMS"));
+	GVLoadPageDirect("../../gvlogin/gv_logout");
 	exit;
 ?>

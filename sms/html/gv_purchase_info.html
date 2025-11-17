@@ -6,6 +6,7 @@
 		{
 			$cboVendor = 0;
 			$txtPurchaseDate = GVGetCurrentDate();
+			$txtDueDate = GVGetCurrentDate();
 			$rdoPurchaseTypeInd = 0;
 			$txtRemarks = "";
 			$txtPurchaseCode = "";
@@ -39,6 +40,12 @@
 					$txtTransportAmount = GVformatAmount(GVStringFormat($MyRowData['ship_hand_amt']));
 					$txtTotalAmount = GVformatAmount(GVStringFormat($MyRowData['tot_amount']));
 					$txtOverallAmount = GVformatAmount(GVStringFormat($MyRowData['overall_amount']));
+					
+					$due_date = GVStringFormat($MyRowData['due_date']);
+					
+					if($due_date != "" && $due_date != "0000-00-00")
+						$txtDueDate = GVGetUserDateformat($due_date);
+					
 				}
 				MyDbFreeResult($MyDbResult);
 			}
@@ -75,7 +82,7 @@
 				<label class='MyLabelText text-right' style='margin:3px;'>Vendor</label>
 			</div>
 			
-			<div class="col-lg-3 col-md-3 col-sm-3 col-xs-3">
+			<div class="col-lg-2 col-md-2 col-sm-2 col-xs-2">
 				<? GVComboBox("INPUT","cboVendor","cboVendor",$vendorArr,"","width:150px;margin-left: 5px;","onchange='cboVendor_onchanged(this.value);'"); ?>
 			</div>
 			
@@ -93,9 +100,17 @@
 			
 			<div class="col-lg-2 col-md-2 col-sm-2 col-xs-2" style='padding-top: 5px;'>
 				<?
-					GVRadioButton("Credit","rdoPurchaseTypeInd","rdoPurchaseTypeInd1","1","","",""); 
-					GVRadioButton("Cash","rdoPurchaseTypeInd","rdoPurchaseTypeInd0","0","","","");
+					GVRadioButton("Credit","rdoPurchaseTypeInd","rdoPurchaseTypeInd1","1","","","onchange=rdoPurchaseTypeInd_changed();"); 
+					GVRadioButton("Cash","rdoPurchaseTypeInd","rdoPurchaseTypeInd0","0","","","onchange=rdoPurchaseTypeInd_changed();");
 				?> 
+			</div>
+			
+			<div class="col-lg-1 col-md-1 col-sm-1 col-xs-1" id='DueDateLblID'>
+				<label class='MyLabelText text-right'>Due Date</label>
+			</div>
+			
+			<div class="col-lg-2 col-md-2 col-sm-2 col-xs-2" id='DueDateInID'>
+				<? GVDateBox("INPUT","txtDueDate","txtDueDate","","","maxlength='10'");  ?>
 			</div>
 		</div>
 		
@@ -431,6 +446,7 @@
 	}
 	
 	$('#txtPurchaseDate').daterangepicker({ "singleDatePicker": true, locale: { format: 'DD-MM-YYYY' }});
+	$('#txtDueDate').daterangepicker({ "singleDatePicker": true, locale: { format: 'DD-MM-YYYY' }});
 	
 	function AddNewItems(_recordURL) 
 	{
@@ -645,6 +661,22 @@
 			}
 		}
 	}
+	
+	function rdoPurchaseTypeInd_changed()
+	{
+		if($("#rdoPurchaseTypeInd1").is(":checked"))
+		{
+			$("#DueDateInID").show();
+			$("#DueDateLblID").show();
+		}
+		else
+		{
+			$("#DueDateInID").hide();
+			$("#DueDateLblID").hide();
+		}
+	}
+	
+	rdoPurchaseTypeInd_changed();
 	
 	var _errInd = '<? echo 	$ErrorInd; ?>';
 	

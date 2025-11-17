@@ -1,11 +1,7 @@
 <? 
-
 	include_once("gv_header.php");
-
 	GVmasterAuth();
-
 	include("../info/gv_menu_info.php");
-	
 ?>
 	<!DOCTYPE html>
 	<html lang="en">
@@ -22,7 +18,7 @@
 	
 	<body>
 	<div class="page-wrapper toggled">
-		<nav class="navbar navbar-expand-lg navbar-dark bg-dark fixed-top" id="GvNav" style='z-index:0;background:#f2f2f2 !important;box-shadow: 0 2px 5px 0 rgba(0,0,0,0.16),0 2px 10px 0 rgba(0,0,0,0.75);'>
+		<nav class="navbar navbar-expand-lg navbar-dark bg-dark fixed-top" id="GvNav" style='z-index:0;background:#f2f2f2 !important;box-shadow: 0 2px 5px 0 rgba(0,0,0,0.16),0 2px 5px 0 rgba(0,0,0,0.75);'>
 			<a class="navbar-brand"><img src='<? echo "/gvtech/images/gvlogo1.png";?>' style="width:40px;height:35px;"></a>
 			
 			
@@ -59,8 +55,8 @@
 			?>
 			<div style='margin-right:15px;'>
 				<div class="dropdown">
-				  <button type="button" class="btn btn-secondary dropdown-toggle" data-toggle="dropdown" style='background:#00ABFF;border:none;font-weight:600;letter-spacing:0.9;'>
-				   <? echo $gv_username; ?>
+				  <button type="button" class="btn btn-secondary dropdown-toggle" data-toggle="dropdown" style='background:#6c757d;border:none;letter-spacing:0.4;'>
+				   <? echo "<i class='fa fa-user fa-1x'></i> ".$gv_empname; ?>
 				  </button>
 				  <div class="dropdown-menu dropdown-menu-right">
 				    <a class="dropdown-item" href="#" onclick="setGVPopupSession('<? echo $activityURL; ?>','<? echo $GV_PopupSSDATA; ?>',1000,550);">Activity History</a>
@@ -108,7 +104,7 @@
   	var _pageReloadInd = '<? echo $pageReloadInd; ?>';
   	
   	if(_pageReloadInd == 1)
-  		GVtopDirect("../backend/gv_redirect");
+  		GVtopDirect("../backend/redirect");
 </script>
 <?
 include_once("gv_footer.php"); 

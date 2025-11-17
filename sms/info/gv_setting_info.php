@@ -14,11 +14,11 @@
 		$GVsubMenuArr[$GVsubMenuCount]["TAG"] = "PWDCHANGE";
 		$GVsubMenuCount++;
 		
-//		$GVsubMenuArr[$GVsubMenuCount]["DESC"] = "EMPLOYEES";
-//		$GVsubMenuArr[$GVsubMenuCount]["IMG"] = "<i class='fa fa-user'></i>";
-//		$GVsubMenuArr[$GVsubMenuCount]["LINK"] = GVstringEncrption("LoadHtmlPage=gv_employee_list&GVmenu=$GVmenu&GVsubMenu=EMPLOYEES");
-//		$GVsubMenuArr[$GVsubMenuCount]["TAG"] = "EMPLOYEES";
-//		$GVsubMenuCount++;
+		$GVsubMenuArr[$GVsubMenuCount]["DESC"] = "Employees";
+		$GVsubMenuArr[$GVsubMenuCount]["IMG"] = "<i class='fa fa-user'></i>";
+		$GVsubMenuArr[$GVsubMenuCount]["LINK"] = GVstringEncrption("LoadHtmlPage=gv_employee_list&GVmenu=$GVmenu&GVsubMenu=EMPLOYEES");
+		$GVsubMenuArr[$GVsubMenuCount]["TAG"] = "EMPLOYEES";
+		$GVsubMenuCount++;
 		
 		$GVsubMenuArr[$GVsubMenuCount]["DESC"] = "Vendors";
 		$GVsubMenuArr[$GVsubMenuCount]["IMG"] = "<i class='fa fa-handshake-o'></i>";
@@ -30,6 +30,12 @@
 		$GVsubMenuArr[$GVsubMenuCount]["IMG"] = "<i class='fa fa-group'></i>";
 		$GVsubMenuArr[$GVsubMenuCount]["LINK"] = GVstringEncrption("LoadHtmlPage=gv_customer_list&GVmenu=$GVmenu&GVsubMenu=CUSTOMERS");
 		$GVsubMenuArr[$GVsubMenuCount]["TAG"] = "CUSTOMERS";
+		$GVsubMenuCount++;
+		
+		$GVsubMenuArr[$GVsubMenuCount]["DESC"] = "Departments";
+		$GVsubMenuArr[$GVsubMenuCount]["IMG"] = "<i class='fa fa-group'></i>";
+		$GVsubMenuArr[$GVsubMenuCount]["LINK"] = GVstringEncrption("LoadHtmlPage=gv_department_list&GVmenu=$GVmenu&GVsubMenu=DEPARTMENTS");
+		$GVsubMenuArr[$GVsubMenuCount]["TAG"] = "DEPARTMENTS";
 		$GVsubMenuCount++;
 		
 		$GVsubMenuArr[$GVsubMenuCount]["DESC"] = "Product Categories";
@@ -44,25 +50,6 @@
 		$GVsubMenuArr[$GVsubMenuCount]["TAG"] = "PRODUCTS";
 		$GVsubMenuCount++;
 		
-		//Nitheish
-		$GVsubMenuArr[$GVsubMenuCount]["DESC"] = "Departments";
-		$GVsubMenuArr[$GVsubMenuCount]["IMG"] = "<i class='fa fa-cubes'></i>";
-		$GVsubMenuArr[$GVsubMenuCount]["LINK"] = GVstringEncrption("LoadHtmlPage=gv_department_list&GVmenu=$GVmenu&GVsubMenu=DEPARTMENTS");
-		$GVsubMenuArr[$GVsubMenuCount]["TAG"] = "DEPARTMENTS";
-		$GVsubMenuCount++;
-
-		$GVsubMenuArr[$GVsubMenuCount]["DESC"] = "Employee";
-		$GVsubMenuArr[$GVsubMenuCount]["IMG"] = "<i class='fa fa-cubes'></i>";
-		$GVsubMenuArr[$GVsubMenuCount]["LINK"] = GVstringEncrption("LoadHtmlPage=gv_employee_list&GVmenu=$GVmenu&GVsubMenu=EMPLOYEE");
-		$GVsubMenuArr[$GVsubMenuCount]["TAG"] = "EMPLOYEE";
-		$GVsubMenuCount++;
-
-		$GVsubMenuArr[$GVsubMenuCount]["DESC"] = "Employee Associate Roles";
-		$GVsubMenuArr[$GVsubMenuCount]["IMG"] = "<i class='fa fa-cubes'></i>";
-		$GVsubMenuArr[$GVsubMenuCount]["LINK"] = GVstringEncrption("LoadHtmlPage=gv_emp_associate_list&GVmenu=$GVmenu&GVsubMenu=EMPLOYEEASSROLES");
-		$GVsubMenuArr[$GVsubMenuCount]["TAG"] = "EMPLOYEEASSROLES";
-		$GVsubMenuCount++;
-
 		if(strlen($GVsubMenu) == 0)
 		{
 			$GVsubMenu = $GVsubMenuArr[0]["TAG"];

@@ -1,9 +1,14 @@
+	<style>
+	.form-group {
+	    margin-bottom: 0px;
+	}
+	</style>
 	<? 
 	include("page_header.html");
 	include("../info/gv_dashboard_info.php"); 
 	?>
 	<div class="container-fluid">
-		<div class="row" style='padding:12px 7px 0px 0px;'>
+		<div class="row" style='padding:15px 7px 0px 0px;'>
 			<div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
 				<label class="MyTextHeading"><i class='fa fa-dashboard'></i><span>Dashboard</span></label>
 			</div>
@@ -102,29 +107,51 @@
 		<div class="row" style='padding-top:10px;'>
 			<div class="col-lg-6 col-md-6 col-sm-6 col-xs-6">
 				<div class="card">
-					<div class="card-header" style='background-color: #E7E9EB;'><label class='MyLabelText' style='margin:0px;padding:0px;'>Alert</label></div>
+					<div class="card-header" style='background-color: #E7E9EB;display:inline-block;padding: .35rem 1.25rem;'>
+					<label class='MyLabelText' style='margin:0px;padding:0px;display:inline-block;margin-top:5px;'>Alert</label>
+					<?
+						$alertOptionArr = array();
+						$alertOptionArr["PRODUCT"] = "Product";
+						$alertOptionArr["SALES"] = "Sales";
+						$alertOptionArr["PURCHASE"] = "Purchase";
+						GVComboBox("INPUT","cboAlertOption","cboAlertOption",$alertOptionArr,"","width:150px;margin-left: 5px;","onchange='GVformSubmitCall(\"OPTION_LIST\");'","float:right;"); 
+					?>
+					</div>
 					<div class="card-body" id='AlertDIV' style='overflow-y:auto;width:100%;'>
 						<?
+							
 							echo "<ul class='GVListingType'>";
-							$MySelectQry = "select product_id,product_name,product_code,remaining_qty from product_info where";
-							$MySelectQry .= " company_id=?";MYSQL_BuildArray("company_id",$company_id,"s");
-							$MySelectQry .= " and delete_ind=?";MYSQL_BuildArray("delete_ind",'0',"s");
-							$MySelectQry .= " and alert_ind=?";MYSQL_BuildArray("alert_ind",'1',"s");
-							$MySelectQry .= " and remaining_qty<=qty_count_alert";
-							$MyDbResult =  MyDbQuery($MySelectQry,$_GVParamArray);	
-							while($MyRowData = mysqli_fetch_array($MyDbResult, MYSQLI_ASSOC)) 
+							if($cboAlertOption == "PURCHASE")
 							{
-								$product_id = GVStringFormat($MyRowData['product_id']);
-								$product_name = GVStringFormat($MyRowData['product_name']);
-								$product_code = GVStringFormat($MyRowData['product_code']);
-								$remaining_qty_alert = GVStringFormat($MyRowData['remaining_qty']);
-								
-								if($remaining_qty_alert == 0)
-									echo "<li><span class='badge badge-danger' style='margin-left:5px;font-size:11px;padding:5px;'>Out of stock</span><label class='MyLabelText' style='display: inline-block;'> <span style='color:#00ABFF;'>$product_name ( $product_code )</span> product</label></li>";
-								else
-									echo "<li><span class='badge badge-warning' style='margin-left:5px;font-size:11px;padding:5px;'>Low stock</span> <label class='MyLabelText' style='display: inline-block;'> <span style='color:#00ABFF;'>$product_name ( $product_code )</span> product remaining <span style='color:#00ABFF;'>$remaining_qty_alert</span> quantity only available</label></li>";
 							}
-							MyDbFreeResult($MyDbResult);
+							else if($cboAlertOption == "SALES")
+							{
+							}  
+							else
+							{
+								$MySelectQry = "select product_id,product_name,product_code,remaining_qty from product_info where";
+								$MySelectQry .= " company_id=?";MYSQL_BuildArray("company_id",$company_id,"s");
+								$MySelectQry .= " and delete_ind=?";MYSQL_BuildArray("delete_ind",'0',"s");
+								$MySelectQry .= " and alert_ind=?";MYSQL_BuildArray("alert_ind",'1',"s");
+								$MySelectQry .= " and remaining_qty<=qty_count_alert";
+								$MyDbResult =  MyDbQuery($MySelectQry,$_GVParamArray);	
+								while($MyRowData = mysqli_fetch_array($MyDbResult, MYSQLI_ASSOC)) 
+								{
+									$product_id = GVStringFormat($MyRowData['product_id']);
+									$product_name = GVStringFormat($MyRowData['product_name']);
+									$product_code = GVStringFormat($MyRowData['product_code']);
+									$remaining_qty_alert = GVStringFormat($MyRowData['remaining_qty']);
+									
+									$editLink = GVstringEncrption("LoadHtmlPage=gv_sales_list&GVmenu=$GVmenu&cboSearchOpt=CUSTCODE&txtSearchStr=$customerCodeTemp&fromReportLinkInd=1&txtRangeDate=$txtRangeDate&fromPage=gv_customer_report");
+									$editIcon = GVimage("GVview","GVview","/gvtech/images/enterInto.png","","cursor:pointer;","width='20' title='View' onclick=GVcallLoader();setGVPageSession('$editLink','$GV_PageSSDATA',1);");
+								
+									if($remaining_qty_alert == 0)
+										echo "<li><span class='badge badge-danger' style='margin-left:5px;font-size:10px;padding:5px;'>Out of stock</span><label class='MyLabelText' style='display: inline-block;'> <span style='color:#00ABFF;'>$product_name ( $product_code )</span> product</label>$editIcon</li>";
+									else
+										echo "<li><span class='badge badge-warning' style='margin-left:5px;font-size:10px;padding:5px;'>Low stock</span> <label class='MyLabelText' style='display: inline-block;'> <span style='color:#00ABFF;'>$product_name ( $product_code )</span> product remaining <span style='color:#00ABFF;'>$remaining_qty_alert</span> quantity only available</label>$editIcon</li>";
+								}
+								MyDbFreeResult($MyDbResult);
+							}
 							echo "</ul>";
 						?>
 					</div>
