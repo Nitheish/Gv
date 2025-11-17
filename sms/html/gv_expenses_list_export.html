@@ -1,0 +1,138 @@
+<?
+	GVmasterAuth();
+	
+	include("../info/gv_expense_info.php"); 
+	
+	$txtRangeDateStart = "";
+	$txtRangeDateEnd = "";
+	
+	if($txtRangeDate != "")
+	{
+		$txtRangeDateStart = GVGetDateDBformat(substr($txtRangeDate,0,10));
+		$txtRangeDateEnd = GVGetDateDBformat(substr($txtRangeDate,13,10));
+	}
+	
+	$htmlContent = "<table class='table' cellpadding='4' style='width:100%;'>";
+	
+	$MySelectQry = "select ei.*,count(expenses_info_id) over() as totCnt";
+	$MySelectQry .= " from expenses_info ei where";
+	$MySelectQry .= " company_id=?";MYSQL_BuildArray("company_id",$company_id,"s");
+	
+	if($cboExpenseType != "")
+	{
+		$MySelectQry .= " and expense_type=?";MYSQL_BuildArray("expense_type",$cboExpenseType,"s");
+	}
+	
+	if($txtRangeDate != "")
+	{
+		if($txtRangeDateStart == $txtRangeDateEnd)
+		{
+			$MySelectQry .= " and expense_date=?";MYSQL_BuildArray("expense_date",$txtRangeDateStart,"s");
+		}
+		else
+		{
+			$MySelectQry .= " and expense_date between ? ";MYSQL_BuildArray("expense_date",$txtRangeDateStart,"s");
+			$MySelectQry .= " and ?";MYSQL_BuildArray("expense_date",$txtRangeDateEnd,"s");
+		}
+	}
+	
+	$MySelectQry .= " order by $GVorderBy";
+	$MyDbResult =  MyDbQuery($MySelectQry,$_GVParamArray);
+	$MyNumRows = MyDbNumRows($MyDbResult);
+	if($MyNumRows > 0)
+	{
+		$htmlContent .= "<tr>";
+		$htmlContent .= "<th width='5%' class='GVtableHead text-center'>S.No</th>";
+		$htmlContent .= "<th width='12%' class='GVtableHead text-left'>Expanse Date</th>";
+		$htmlContent .= "<th width='25%' class='GVtableHead text-left'>Expanse Type</th>";
+		$htmlContent .= "<th width='25%' class='GVtableHead text-left'>Payment Type</th>";
+		$htmlContent .= "<th width='15%' class='GVtableHead text-right'>Expanse Amount&nbsp;(&#8377;)</th>";
+		$htmlContent .= "</tr>";
+		
+		$recCount = 0;
+		$totExpense = 0;			
+		while($MyRowData = mysqli_fetch_array($MyDbResult, MYSQLI_ASSOC))
+		{
+			$expense_type = GVStringFormat($MyRowData['expense_type']);
+			$expense_date = GVGetUserDateformat(GVStringFormat($MyRowData['expense_date']));
+			$expense_amount = GVformatAmount(GVStringFormat($MyRowData['expense_amount']));
+			$payment_type = GVStringFormat($MyRowData['payment_type']);
+		
+			$recCount++;
+			$totExpense += $expense_amount;
+			
+			$htmlContent .= "<tr>";
+			$htmlContent .= "<td class='GVtableData text-center'>$recCount</td>";
+			$htmlContent .= "<td class='GVtableData text-left'>$expense_date</td>";
+			$htmlContent .= "<td class='GVtableData text-left'>$expense_type</td>";
+			$htmlContent .= "<td class='GVtableData text-left'>".$payTypeArr[$payment_type]."</td>";
+			$htmlContent .= "<td class='GVtableData text-right'>".GVCurrecyFormat($expense_amount, 1)."</td>";
+			$htmlContent .= "<tr>";
+		}
+		
+		$htmlContent .= "<tr>";
+		$htmlContent .= "<td class='GVtableData text-center'></td>";
+		$htmlContent .= "<td class='GVtableData text-left'></td>";
+		$htmlContent .= "<td class='GVtableData text-left'></td>";
+		$htmlContent .= "<td class='GVtableHead text-left'>Total Expense</td>";
+		$htmlContent .= "<td class='GVtableHead text-right'>".GVCurrecyFormat($totExpense, 1)."</td>";
+		$htmlContent .= "<tr>";
+	}
+	else
+	{
+		$htmlContent .= "<tr>";
+		$htmlContent .= "<td class='GVtableData text-center'>No Records found</td>";
+		$htmlContent .= "</tr>";
+	}
+	MyDbFreeResult($MyDbResult);
+	
+	$htmlContent .= "</table>";
+	
+	if($cboExpenseType != "")
+		$pdfHeading = "Expenses Summary - ".$expenseArr[$cboExpenseType];
+	else
+		$pdfHeading = "Expenses Summary";
+		
+	if($txtRangeDate != "")
+	{
+		$pdfHeading .= " ( Date Range From ".GVGetUserDateformat($txtRangeDateStart)." to ".GVGetUserDateformat($txtRangeDateEnd)." )";
+	}
+	
+	$CompanyDetails = "";
+	$MySelectQry = "select company_name,company_city,company_zip from gv_company_info where";
+	$MySelectQry .= " company_id=?";MYSQL_BuildArray("company_id",$company_id,"s");
+	$MyDbResult =  MyDbQuery($MySelectQry,$_GVParamArray);	
+	$MyNumRows = MyDbNumRows($MyDbResult);
+	if($MyRowData = mysqli_fetch_array($MyDbResult, MYSQLI_ASSOC))
+	{
+		$CompanyDetails = GVStringFormat($MyRowData['company_name']);
+		$CompanyDetails .= ", ".GVStringFormat($MyRowData['company_city'])." - ".GVStringFormat($MyRowData['company_zip']);;
+	}
+	MyDbFreeResult($MyDbResult);
+	
+	$currentDateTime = GVGetUserDateTimeformat(GVGetDBCurrentDateTime());
+	
+	$headerContent = "<table style='width:100%;font-style:italic;font-size:11px;font-weight:bold;color: #4d4d4d;'>";
+	$headerContent .= "<tr>";
+	$headerContent .= "<td class='text-left' style='font-style:normal;'>$pdfHeading</td>";
+	$headerContent .= "<td class='text-right'>$currentDateTime</td>";
+	$headerContent .= "</tr>";
+	$headerContent .= "</table>";
+	
+	$footerContent = "<table style='width:100%;font-style:italic;font-size:11px;font-weight:normal;color: #4d4d4d;'>";
+	$footerContent .= "<tr>";
+	$footerContent .= "<td class='text-left'>$CompanyDetails</td>";
+	$footerContent .= "<td class='text-right'>Page {PAGENO} of {nbpg}</td>";
+	$footerContent .= "</tr>";
+	$footerContent .= "</table>";
+	
+	$HTMLSetupArr = array();
+	$HTMLSetupArr["Header"] = $headerContent;
+	$HTMLSetupArr["Footer"] = $footerContent;
+	$HTMLSetupArr["format"] = "A4";
+	$HTMLSetupArr["orientation"] = "L";
+	$HTMLSetupArr["File_Name"] = "ExpenseSummary_".date("ymdhisu");
+	GVGenerateHTMLtoPDF($htmlContent, $HTMLSetupArr);
+	
+	include("gv_footer.php");
+?>

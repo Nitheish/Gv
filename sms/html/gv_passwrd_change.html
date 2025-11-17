@@ -1,0 +1,74 @@
+	<? 
+		include("page_header.html");
+		include("../info/gv_setting_info.php"); 
+		include("gv_submenu.html");
+		
+		if($ErrorInd == 0)
+		{
+			$txtNewPassword = "";
+			$txtConfirmPassword = "";
+			$txtOldPassword = "";
+		}
+	?>
+	
+	<div class="container-fluid" style='padding-bottom:50px;'>
+		<div class="row" style='padding:12px 7px 0px 0px;'>
+			<div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
+				<label class="MyTextHeading"><i class='fa fa-key'></i><span>Login Password Change</span></label>
+			</div>
+		</div>
+		
+		<? if($loginPwdReloginInd == 1) { ?>
+		<div class="row">
+			<div class="col-lg-12 col-md-12 col-sm-12 col-xs-12 text-center" style='color:red;'>
+				<h4>!Password Changes updated </h4>
+			</div>
+		</div>
+		
+		<div class="row" style="margin-top:20px;">	
+			<div class="col-lg-12 col-md-12 col-sm-12 col-xs-12 text-center">
+				<? 
+					$reLoginPath = "../../gvlogin/gv_sms.php";
+					GVInputButton("CLICK HERE TO RE-LOGIN","GVloginBtn","GVloginBtn","button","SUCCESS","","onclick=GVloadDirect('$reLoginPath');"); 
+				?>
+			</div>														
+		</div>
+					
+		<? } else { ?>
+		<div class="row" style='padding-top: 5px;'>
+			<div class="col-lg-4 col-md-12 col-sm-12 col-xs-12 text-right">
+				<label class="MyLabelText">Old Password</label>
+			</div>
+			
+			<div class="col-lg-4 col-md-12 col-sm-12 col-xs-12">
+				<? GVPwdTextBox("INPUT","txtOldPassword","txtOldPassword","","","maxlength='15' placeholder='Old Password'"); ?> 
+			</div>
+		</div>
+		
+		<div class="row" style='padding-top: 5px;'>
+			<div class="col-lg-4 col-md-12 col-sm-12 col-xs-12 text-right">
+				<label class="MyLabelText">New Password</label>
+			</div>
+			
+			<div class="col-lg-4 col-md-12 col-sm-12 col-xs-12">
+				<? GVPwdTextBox("INPUT","txtNewPassword","txtNewPassword","","","maxlength='15' placeholder='New Password'"); ?> 
+			</div>
+		</div>
+		
+		<div class="row" style='padding-top: 5px;'>
+			<div class="col-lg-4 col-md-12 col-sm-12 col-xs-12 text-right">
+				<label class="MyLabelText">Confirm Password</label>
+			</div>
+			
+			<div class="col-lg-4 col-md-12 col-sm-12 col-xs-12">
+				<? GVPwdTextBox("INPUT","txtConfirmPassword","txtConfirmPassword","","","maxlength='15' placeholder='Confirm Password'"); ?> 
+			</div>
+		</div>
+		
+		<? } ?>
+	</div>
+	
+	<? 
+		$GVsaveBtnInd = 1;
+		include("page_footer.html"); 
+	?>

@@ -1,0 +1,156 @@
+	<?
+		$GVpageTitle = "SALES PAYMENT INFORMATION";
+		include("gv_popup_header.html");
+		
+		$payTypeArr = array();
+		$payTypeArr["CASH"] = "Cash";
+		$payTypeArr["UPI"] = "Gpay / Phone Pe / Paytm";
+		$payTypeArr["NETBANKING"] = "Net Banking";
+		
+		$txtBalanceDue = 0;
+		$MySelectQry = "select sum(balance_due) as balance_due from sales_info where ";
+		$MySelectQry .= " company_id=?";MYSQL_BuildArray("company_id",$company_id,"s");
+		$MySelectQry .= " and customer_id=?";MYSQL_BuildArray("customer_id",$GVID1,"s");
+		$MySelectQry .= " and delete_ind=?";MYSQL_BuildArray("delete_ind","0","s");
+		$MyDbResult =  MyDbQuery($MySelectQry,$_GVParamArray);
+		while($MyRowData = mysqli_fetch_array($MyDbResult, MYSQLI_ASSOC)) 
+		{
+			$txtBalanceDue = GVformatAmount(GVStringFormat($MyRowData['balance_due']));
+		}
+		MyDbFreeResult($MyDbResult);
+		
+		$SalesIdArr = array();
+		$MySelectQry = "select sales_id,balance_due from sales_info where ";
+		$MySelectQry .= " company_id=?";MYSQL_BuildArray("company_id",$company_id,"s");
+		$MySelectQry .= " and customer_id=?";MYSQL_BuildArray("customer_id",$GVID1,"s");
+		$MySelectQry .= " and delete_ind=?";MYSQL_BuildArray("delete_ind","0","s");
+		$MySelectQry .= " and balance_due>?";MYSQL_BuildArray("balance_due","0","s");
+		$MySelectQry .= " order by sales_id asc"; 
+		$MyDbResult =  MyDbQuery($MySelectQry,$_GVParamArray);
+		while($MyRowData = mysqli_fetch_array($MyDbResult, MYSQLI_ASSOC)) 
+		{
+			$SalesIdArr[GVStringFormat($MyRowData['sales_id'])] = GVformatAmount(GVStringFormat($MyRowData['balance_due']));
+		}
+		MyDbFreeResult($MyDbResult);
+		
+		if($ErrorInd == 0)
+		{
+			$txtPayDate = GVGetCurrentDate();
+			$cboPayType = "";
+			$txtPayAmt = "0.00";
+			$txtPayReference = "";
+		}
+	?>
+	
+	<div class="container-fluid" style='margin-top:10px;margin-bottom:10px;'>
+		<div class="row">
+			<div class="col-lg-4 col-md-4 col-sm-4 col-xs-4 text-right">
+				<label class="MyLabelText">Overall Balance</label>
+			</div>
+			
+			<div class="col-lg-4 col-md-4 col-sm-4 col-xs-4">
+				<? GVAmountBox("INPUT","txtBalanceDue","txtBalanceDue","","","readonly placeholder='Payment Amount'"); ?> 
+			</div>
+		</div>
+		
+		<div class="row">
+			<div class="col-lg-4 col-md-4 col-sm-4 col-xs-4 text-right">
+				<label class="MyLabelText">Payment Date</label>
+			</div>
+			
+			<div class="col-lg-4 col-md-4 col-sm-4 col-xs-4">
+				<? GVDateBox("INPUT","txtPayDate","txtPayDate","","","maxlength='10'");  ?>
+			</div>
+		</div>
+		
+		<div class="row">
+			<div class="col-lg-4 col-md-4 col-sm-4 col-xs-4 text-right">
+				<label class="MyLabelText">Payment Type</label>
+			</div>
+			
+			<div class="col-lg-4 col-md-4 col-sm-4 col-xs-4">
+				<? GVComboBox("INPUT","cboPayType","cboPayType",$payTypeArr,"","width:150px;margin-left: 5px;","onchange='cboPayType_onchanged();'"); ?> 
+			</div>
+		</div>
+		
+		<div class="row">
+			<div class="col-lg-4 col-md-4 col-sm-4 col-xs-4 text-right">
+				<label class="MyLabelText">Payment Amount</label>
+			</div>
+			
+			<div class="col-lg-4 col-md-4 col-sm-4 col-xs-4">
+				<? GVAmountBox("INPUT","txtPayAmt","txtPayAmt","","","placeholder='Payment Amount'"); ?> 
+			</div>
+		</div>
+		
+		<div id='PayRefID' class="row" style='display:none;'>
+			<div class="col-lg-4 col-md-4 col-sm-4 col-xs-4 text-right">
+				<label class="MyLabelText">Payment Reference</label>
+			</div>
+			
+			<div class="col-lg-6 col-md-6 col-sm-6 col-xs-6">
+				<? GVTextBox("INPUT","txtPayReference","txtPayReference","","","maxlength='50' placeholder='Payment Reference'"); ?> 
+			</div>
+		</div>
+		
+		<div class="row">
+			<div class="col-lg-4 col-md-4 col-sm-4 col-xs-4 text-right">
+				<label class="MyLabelText">Sales Details</label>
+			</div>
+			
+			<div class="col-lg-4 col-md-4 col-sm-4 col-xs-4">
+				<div class="row">
+					<div class="col-lg-6 col-md-6 col-sm-6 col-xs-6">
+						<label class="MyLabelText" style='color:#00ABFF;'>Sales No</label>
+					</div>
+					
+					<div class="col-lg-6 col-md-6 col-sm-6 col-xs-6 text-right">
+						<label class="MyLabelText" style='color:#00ABFF;'>Balance Due</label>
+					</div>
+				</div>
+					
+				<?
+				foreach($SalesIdArr as $sales_id=>$balance_due)
+				{?>
+					<div class="row">
+						<div class="col-lg-6 col-md-6 col-sm-6 col-xs-6">
+							<label class="MyLabelText"><? echo "SL".$sales_id ?></label>
+						</div>
+						
+						<div class="col-lg-6 col-md-6 col-sm-6 col-xs-6 text-right">
+							<label class="MyLabelText" style="color:#000;font-weight: normal;">
+							<? echo GVCurrecyFormat($balance_due); ?>
+							</label>
+						</div>
+					</div>
+				<?
+				}
+				?>
+			</div>
+		</div>
+	</div>
+	
+	<? 
+		$GVBackBtnInd = 1;
+		$GVBackBtnVal = "CANCEL";
+		$GVsaveBtnInd = 1;
+		$GVSaveBtnVal = "SAVE";
+		include("gv_popup_footer.html"); 
+	?>
+	
+	<script type='text/javascript'>
+	$('#txtPayDate').daterangepicker({ "singleDatePicker": true, locale: { format: 'DD-MM-YYYY' }});
+	
+	function cboPayType_onchanged()
+	{
+		var _cboPayType = $("#cboPayType").val();
+		
+		if(_cboPayType != "CASH")
+			$("#PayRefID").show();
+		else
+			$("#PayRefID").hide();
+	}
+	
+	cboPayType_onchanged();
+	
+	</script>

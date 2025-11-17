@@ -1,0 +1,35 @@
+<?
+	$numRecordPerPageDB = 0;
+	$MySelectQry = "select gv_num_page_record,gv_sort_type,gv_sort_name from gv_page_setup where";
+	$MySelectQry .= " company_id=?";MYSQL_BuildArray("company_id",$company_id,"s");
+	$MySelectQry .= " and company_id=?";MYSQL_BuildArray("company_id",$company_id,"s");
+	$MySelectQry .= " and gv_page_name=?";MYSQL_BuildArray("gv_page_name",$LoadHtmlPage,"s");
+	$MyDbResult =  MyDbQuery($MySelectQry,$_GVParamArray);	
+	if($MyRowData = mysqli_fetch_array($MyDbResult, MYSQLI_ASSOC)) 
+	{
+		$numRecordPerPageDB = GVStringFormat($MyRowData['gv_num_page_record']);
+		
+		if(!$_POST)
+		{
+			$txtSortName = GVStringFormat($MyRowData['gv_sort_name']);
+			$txtSortMethod = GVStringFormat($MyRowData['gv_sort_type']);
+		}
+	}
+	MyDbFreeResult($MyDbResult);
+		
+	if($numRecordPerPage == "")
+	{
+		$numRecordPerPage = $numRecordPerPageDB;
+		
+		if($numRecordPerPage == "" || $numRecordPerPage == 0)	
+			$numRecordPerPage = 10;
+	}
+	
+	if($currentPage == "")
+		$currentPage = 1;
+	
+	$startRecord = ($currentPage - 1) * $numRecordPerPage;
+	
+	if($txtSortName != "" && $txtSortMethod != "")
+		$GVorderBy = $txtSortName." ".$txtSortMethod;
+?>

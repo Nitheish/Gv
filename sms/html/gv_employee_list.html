@@ -1,0 +1,225 @@
+<style>
+.form-group {
+    margin-bottom: 0px;
+}
+</style>
+<?
+    include("page_header.html");
+    include("../info/gv_setting_info.php"); 
+    include("gv_submenu.html");
+
+
+    $sortMethodArr = array();
+    $sortMethodArr[] = "gv_login_id";
+    $sortMethodArr[] = "first_name";
+    $sortMethodArr[] = "username";
+    $sortMethodArr[] = "phone_number";
+    $sortMethodArr[] = "email";
+    $sortMethodArr[] = "address";
+    $sortMethodArr[] = "city";
+    $sortMethodArr[] = "date_of_birth";
+    $sortMethodArr[] = "date_of_joining";
+    $sortMethodArr[] = "password";
+
+    if ($txtSortName == "" || !in_array($txtSortMethod, $sortMethodArr)) {
+        $txtSortName = "gv_login_id";   
+    }
+
+    if($txtSortMethod == "" || !in_array($txtSortMethod,$GV_sortingArr))
+			$txtSortMethod = "desc";
+		
+	
+    $GVorderBy = $txtSortName." ".$txtSortMethod;
+    
+			
+
+     $page_name = "gv_employee_list";
+
+    if ($GVSaveBtn == "SEARCH" || $GVSaveBtn == "RESET") {
+        $currentPage = 1;
+        $startRecord = 0;
+    }
+
+    // Search options
+    $serachOptArr = array("NAME" => "Employee Name", "CODE" => "Employee Code");
+    if ($cboSearchOpt == "") $cboSearchOpt = "NAME";
+
+    $pagePerRecordArr = array(10=>10, 25=>25, 50=>50);
+
+    $FILTER_OPTION = "SAVE";
+    $FILTER_ARR["cboSearchOpt"] = $cboSearchOpt;
+    $FILTER_ARR["txtSearchStr"] = $txtSearchStr;
+    include("../backend/gv_filter_info.php"); 
+    $GVPaginationInd = 1;
+
+    // Employee query
+    $MySelectQry  = "SELECT emp.*, COUNT(emp.gv_login_id) OVER() AS totCnt ";
+    $MySelectQry .= "FROM gv_login emp ";
+    $MySelectQry .= "WHERE emp.company_id=? ";
+    MYSQL_BuildArray("company_id", $company_id, "s");
+    $MySelectQry .= "AND emp.delete_ind=? ";
+    MYSQL_BuildArray("delete_ind", "0", "s");
+    $MySelectQry .= "AND emp.login_type=? ";
+    MYSQL_BuildArray("login_type", "Employee", "s");
+
+    if ($cboSearchOpt == "NAME" && strlen($txtSearchStr) > 0) {
+        $MySelectQry .= " AND emp.emp_name LIKE CONCAT('%', ?, '%')";
+        MYSQL_BuildArray("emp_name", $txtSearchStr, "s");
+    } else if ($cboSearchOpt == "CODE" && strlen($txtSearchStr) > 0) {
+        $MySelectQry .= " AND emp.gv_login_id=?";   // gv_login_id as employee code substitute
+        MYSQL_BuildArray("gv_login_id", strtoupper($txtSearchStr), "s");
+    }
+
+    $MySelectQry .= " ORDER BY $GVorderBy LIMIT $numRecordPerPage OFFSET $startRecord";
+
+    $MyDbResult = MyDbQuery($MySelectQry, $_GVParamArray);
+    $MyNumRows  = MyDbNumRows($MyDbResult);
+    $MyRowData  = mysqli_fetch_array($MyDbResult, MYSQLI_ASSOC);
+    $totNumRecord = GVStringFormat($MyRowData['totCnt']);
+?>
+<div class="container-fluid">
+    <div class="row" style='padding:12px 7px 0px 0px;'>
+        <div class="col-lg-4 col-md-4 col-sm-4 col-xs-4">
+            <label class="MyTextHeading"><i class='fa fa-users'></i><span>Employee Details List</span></label>
+        </div>
+    </div>
+
+    <div class='GVSearchBar'>
+        <?
+        echo "<label class='MyLabelText text-left' style='margin:3px;'>Search</label>";
+        GVComboBox("INPUT","cboSearchOpt","cboSearchOpt",$serachOptArr,"","width:150px;margin-left: 5px;","onchange='cboSearchOpt_onchanged(this.value);'");
+        GVTextBox("INPUT","txtSearchStr","txtSearchStr","","width:200px;margin-left: 5px;","maxlength='35' placeholder='Employee Name'"); 
+        GVimageButton("SEARCH","GVSaveBtn","GVSearchBtn",GVimage("image","image","/gvtech/images/search.png","","","width='15'"),"submit","SECONDARY","margin-left:5px;height:27px;font-size:11px;","");  
+        GVimageButton("RESET","GVSaveBtn","GVResetBtn",GVimage("image","image","/gvtech/images/Refresh.png","","","width='15'"),"button","SECONDARY","margin-left:5px;height:27px;font-size:11px;","onclick='reset_btnClick();'");  
+
+        echo "<label class='MyLabelText text-left' style='margin:3px;margin-left: 5px;'>Show</label>";
+        GVComboBox("INPUT","numRecordPerPage","numRecordPerPage",$pagePerRecordArr,"","margin-left: 5px;width:50px;","onchange='GVPagePerRecord_onchange();'"); 
+        echo "<label class='MyLabelText text-left' style='margin:3px;margin-left: 2px;'>Records</label>";
+
+        $AddURL = GVstringEncrption("LoadHtmlPage=gv_employee_info&GVmenu=$GVmenu&GVsubMenu=$GVsubMenu&GVSTEP=ADD");
+        GVimageButton("ADD NEW","GVloginBtn","GVloginBtn",GVimage("image","image","/gvtech/images/add.png","","","width='15'"),"button","SECONDARY","margin-left:auto;text-align: right;float: right;height:27px;font-size:11px;","onclick='setGVPopupSession(\"$AddURL\",\"$GV_PopupSSDATA\",700,400);'");
+        ?>
+    </div>
+
+    <? if($totNumRecord > 0) { ?>
+    <div id='mainTableID' class="table-responsive GVtableHeadDIV" style='overflow-y:auto;width:100%;'>          
+        <table class="table table-hover GVtableHeadFixed" style='width:100%;margin-top:0px !important;'>
+            <thead>
+				<tr>
+                    <th width='4%' class='GVtableHead text-center'>S.No</th>
+                    <th width='15%' class='GVtableHead text-left'>Employee Name<? GVSortMethod("emp_name",$txtSortMethod); ?></th>
+                    <th width='12%' class='GVtableHead text-left'>Username<? GVSortMethod("gv_username",$txtSortMethod); ?></th>
+                    
+                    <th width='12%' class='GVtableHead text-left'>Email<? GVSortMethod("emp_email",$txtSortMethod); ?></th>
+                    <th width='10%' class='GVtableHead text-left'>Phone<? GVSortMethod("emp_phone",$txtSortMethod); ?></th>
+                    <th width='15%' class='GVtableHead text-left'>Address</th>
+                 
+                    <th width='12%' class='GVtableHead text-left'>Date of Birth<? GVSortMethod("emp_dob",$txtSortMethod); ?></th>
+                    <th width='12%' class='GVtableHead text-left'>Date of Joining<? GVSortMethod("emp_doj",$txtSortMethod); ?></th>
+                    <th width='10%' class='GVtableHead text-left'>Status<? GVSortMethod("active_ind",$txtSortMethod); ?></th>
+                    <th width='5%' class='GVtableHead text-center'>Action</th>
+                </tr>
+			</thead>
+			<tbody>
+			<?
+			$recCount = $startRecord;
+			do {
+				$login_id    = GVStringFormat($MyRowData['gv_login_id']);
+                $emp_name    = GVStringFormat($MyRowData['emp_name']);
+                $username    = GVStringFormat($MyRowData['gv_username']);
+               
+                $email       = GVStringFormat($MyRowData['emp_email']);
+                $phone       = GVStringFormat($MyRowData['emp_phone']);
+                $address     = GVStringFormat($MyRowData['emp_addr1']);
+                $city        = GVStringFormat($MyRowData['emp_city']);
+                $state       = GVStringFormat($MyRowData['emp_state']);
+                $pincode     = GVStringFormat($MyRowData['emp_zip']);
+                $dob         = GVStringFormat($MyRowData['date_of_birth']);
+                $doj         = GVStringFormat($MyRowData['date_of_join']);
+                $status      = ($MyRowData['active_ind'] == 1) ? "Active" : "Inactive";
+                $empAddr = "";
+                        if($address != "")
+							$empAddr = $address.", ";
+						
+						if($city != "")
+							$empAddr .= $city.", ";
+						if($state != "")
+							$empAddr .= $state;
+						if($pincode != "")
+							$empAddr .= " - ".$pincode;
+                $editLink = GVstringEncrption("LoadHtmlPage=gv_employee_info&GVmenu=$GVmenu&GVsubMenu=$GVsubMenu&GVSTEP=EDIT&GVID=$login_id");
+                $DelLink  = GVstringEncrption("LoadHtmlPage=gv_employee_del&GVSTEP=DELETE&GVID=$login_id");
+                $infoLink = GVstringEncrption("LoadHtmlPage=gv_employee_information&GVmenu=$GVmenu&GVsubMenu=$GVsubMenu&GVID=$login_id");
+
+                $recCount++;
+			?>
+			
+			<tr>
+				<td class='GVtableData text-center'><? echo $recCount; ?></td>
+                <td class='GVtableData text-left'><? echo $emp_name; ?></td>
+                <td class='GVtableData text-left'><? echo $username; ?></td>
+                
+                <td class='GVtableData text-left'><? echo $email; ?></td>
+                <td class='GVtableData text-left'><? echo $phone; ?></td>
+                <td class='GVtableData text-left'><? echo $empAddr; ?></td>
+                
+                <td class='GVtableData text-left'><? echo $dob; ?></td>
+                <td class='GVtableData text-left'><? echo $doj; ?></td>
+                <td class='GVtableData text-left'><? echo $status; ?></td>
+				<td class='GVtableData text-center'> 
+					<?
+					echo GVimage("GVedit","GVedit","/gvtech/images/edit.png","","cursor:pointer;","width='15' title='Edit' onclick=setGVPopupSession('$editLink','$GV_PopupSSDATA',700,400);");
+					echo GVimage("GVinfo","GVinfo","/gvtech/images/summary.png","","margin-left:7px;cursor:pointer;","width='18' title='Information' onclick=GVcallLoader();setGVPageSession('$infoLink','$GV_PageSSDATA',1);");
+					echo GVimage("GVdel","GVdel","/gvtech/images/delete.png","","margin-left:7px;cursor:pointer;","width='15' title='Delete' onclick=setGVPopupSession('$DelLink','$GV_PopupSSDATA',400,150);");
+					?>
+				</td>
+			</tr>
+			<? } while($MyRowData = mysqli_fetch_array($MyDbResult, MYSQLI_ASSOC)); ?>
+			</tbody>
+
+        </table>
+    </div>
+    <? } else { ?>
+        <div class="row" style='padding-top:75px;'>
+            <div class="col-lg-12 text-center">
+                <? if(strlen($txtSearchStr) > 0) { ?>
+                    <label class="MyTextWarning"><? echo GVimage("image","image","/gvtech/images/search.png","","","width='50'");  ?><br>No data found, please change the filter</label><br>
+                    <? GVInputButton("Reset","GVSaveBtn","GVSaveBtn","button","SECONDARY","","onclick='reset_btnClick();'"); ?>
+                <? } else if($totNumRecord == 0) { ?>
+                    <label class="MyTextWarning"><i class='fa fa-users'></i><br><br>You don't have any Employee Information</label>
+                <? } ?>
+            </div>
+        </div>
+    <? } ?>
+
+    <? include("gv_pagination.html"); ?>
+</div>
+
+<? include("page_footer.html"); ?>
+
+<script type='text/javascript'>
+var windowHeight = window.innerHeight * 0.71;
+if(document.getElementById("mainTableID"))
+{
+    document.getElementById("mainTableID").style.maxHeight = windowHeight;
+    document.getElementById("mainTableID").style.minHeight = windowHeight;
+}
+
+function cboSearchOpt_onchanged(value)
+{
+    var _selectedFilter = $("#cboSearchOpt option:selected").text();
+    $("#txtSearchStr").attr("placeholder", _selectedFilter);
+}
+
+function reset_btnClick()
+{
+    $("#cboSearchOpt").val("NAME");
+    $("#txtSearchStr").val("");
+    var _selectedFilter = $("#cboSearchOpt option:selected").text();
+    $("#txtSearchStr").attr("placeholder", _selectedFilter);
+    GVcallLoader();
+    GVformPost();
+}
+
+cboSearchOpt_onchanged('<? echo $cboSearchOpt; ?>');
+</script>

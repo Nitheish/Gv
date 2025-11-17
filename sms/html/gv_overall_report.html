@@ -1,0 +1,439 @@
+	<? 
+		include("page_header.html");
+		include("../info/gv_report_info.php"); 
+		include("gv_submenu.html");
+		include("../info/gv_dashboard_info.php"); 
+	?>
+	
+	<div class="container-fluid" style='padding-bottom:50px;'>
+		<div class="row" style='padding:12px 7px 0px 0px;'>
+			<div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
+				<label class="MyTextHeading"><i class='fa fa-area-chart'></i><span>Overall Report</span></label>
+			</div>
+		</div>
+		
+		<div class="row">
+			<div class="col-lg-6 col-md-6 col-sm-6 col-xs-6">
+				<div class="card">
+					<div class="card-header" style='background-color: #E7E9EB;'><label class='MyLabelText' style='margin:0px;padding:0px;'>Overall Account Summary</label></div>
+					<div class="card-body" id='AccountDIV' style='overflow-y:auto;width:100%;'>
+						<div class="row">
+							<div class="col-lg-6 col-md-6 col-sm-6 col-xs-6 text-right">
+								<label class="MyLabelText">Initial Stock Amount</label>
+							</div>
+							
+							<div class="col-lg-4 col-md-4 col-sm-4 col-xs-4 text-right">
+								<label class="MyLabelText" style="color:#000;font-weight: normal;">
+								<? echo GVCurrecyFormat($initialStockAmount);?>
+								</label>
+							</div>
+						</div>
+						
+						<div class="row">
+							<div class="col-lg-6 col-md-6 col-sm-6 col-xs-6 text-right">
+								<label class="MyLabelText">Total Purchased Amount</label>
+							</div>
+							
+							<div class="col-lg-4 col-md-4 col-sm-4 col-xs-4 text-right">
+								<label class="MyLabelText" style="color:#000;font-weight: normal;">
+								<? echo GVCurrecyFormat($overallPurchasedAmt);?>
+								</label>
+							</div>
+						</div>
+						
+						<div class="row">
+							<div class="col-lg-6 col-md-6 col-sm-6 col-xs-6 text-right">
+								<label class="MyLabelText">Total Sales Amount</label>
+							</div>
+							
+							<div class="col-lg-4 col-md-4 col-sm-4 col-xs-4 text-right">
+								<label class="MyLabelText" style="color:#000;font-weight: normal;">
+								<? echo GVCurrecyFormat($overallSalesAmt);?>
+								</label>
+							</div>
+						</div>
+						
+						<div class="row">
+							<div class="col-lg-6 col-md-6 col-sm-6 col-xs-6 text-right">
+								<label class="MyLabelText">Total Sales Discount Amount</label>
+							</div>
+							
+							<div class="col-lg-4 col-md-4 col-sm-4 col-xs-4 text-right">
+								<label class="MyLabelText" style="color:#000;font-weight: normal;">
+								<? echo GVCurrecyFormat($overallDiscountAmt);?>
+								</label>
+							</div>
+						</div>
+						
+						<div class="row">
+							<div class="col-lg-6 col-md-6 col-sm-6 col-xs-6 text-right">
+								<label class="MyLabelText">Total Sales Outstanding Balance</label>
+							</div>
+							
+							<div class="col-lg-4 col-md-4 col-sm-4 col-xs-4 text-right">
+								<label class="MyLabelText" style="color:#000;font-weight: normal;">
+								<? echo GVCurrecyFormat($overallBalanceAmt);?>
+								</label>
+							</div>
+						</div>
+						
+						<div class="row">
+							<div class="col-lg-6 col-md-6 col-sm-6 col-xs-6 text-right">
+								<label class="MyLabelText">Total Sales Profit</label>
+							</div>
+							
+							<div class="col-lg-4 col-md-4 col-sm-4 col-xs-4 text-right">
+								<label class="MyLabelText" style="color:#000;font-weight: normal;">
+								<? echo GVCurrecyFormat($overallSalesProfit);?>
+								</label>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+			
+			<div class="col-lg-6 col-md-6 col-sm-6 col-xs-6">
+				<div class="card">
+					<div class="card-header" style='background-color: #E7E9EB;'><label class='MyLabelText' style='margin:0px;padding:0px;'>Overall Product Summary</label></div>
+					<div class="card-body" id='ProductDIV' style='overflow-y:auto;width:100%;'>
+						<div class="row">
+							<div class="col-lg-6 col-md-6 col-sm-6 col-xs-6 text-right">
+								<label class="MyLabelText">Total Products</label>
+							</div>
+							
+							<div class="col-lg-4 col-md-4 col-sm-4 col-xs-4 text-right">
+								<label class="MyLabelText" style='color:#000;font-weight: normal;'><? echo $totProduct;?></label>
+							</div>
+						</div>
+						
+						<div class="row">
+							<div class="col-lg-6 col-md-6 col-sm-6 col-xs-6 text-right">
+								<label class="MyLabelText">Available Products</label>
+							</div>
+							
+							<div class="col-lg-4 col-md-4 col-sm-4 col-xs-4 text-right">
+								<label class="MyLabelText" style='color:#000;font-weight: normal;'><? echo $totAvailableProduct;?></label>
+							</div>
+						</div>
+						
+						<div class="row">
+							<div class="col-lg-6 col-md-6 col-sm-6 col-xs-6 text-right">
+								<label class="MyLabelText">Out of Stock Products</label>
+							</div>
+							
+							<div class="col-lg-4 col-md-4 col-sm-4 col-xs-4 text-right">
+								<label class="MyLabelText" style='color:#000;font-weight: normal;'><? echo $totOutofStockProduct;?></label>
+							</div>
+						</div>
+						
+						<div class="row">
+							<div class="col-lg-6 col-md-6 col-sm-6 col-xs-6 text-right">
+								<label class="MyLabelText">Sold Products</label>
+							</div>
+							
+							<div class="col-lg-4 col-md-4 col-sm-4 col-xs-4 text-right">
+								<label class="MyLabelText" style='color:#000;font-weight: normal;'><? echo $totSoldProduct;?></label>
+							</div>
+						</div>
+						
+						<div class="row">
+							<div class="col-lg-6 col-md-6 col-sm-6 col-xs-6 text-right">
+								<label class="MyLabelText">Low Stock Products</label>
+							</div>
+							
+							<div class="col-lg-4 col-md-4 col-sm-4 col-xs-4 text-right">
+								<label class="MyLabelText" style='color:#000;font-weight: normal;'><? echo $totLowStockProduct;?></label>
+							</div>
+						</div>
+						
+						<div class="row">
+							<div class="col-lg-6 col-md-6 col-sm-6 col-xs-6 text-right">
+								<label class="MyLabelText">Total Product Quantity</label>
+							</div>
+							
+							<div class="col-lg-4 col-md-4 col-sm-4 col-xs-4 text-right">
+								<label class="MyLabelText" style='color:#000;font-weight: normal;'><? echo $total_qty;?></label>
+							</div>
+						</div>
+						
+						<div class="row">
+							<div class="col-lg-6 col-md-6 col-sm-6 col-xs-6 text-right">
+								<label class="MyLabelText">Sold Product Quantity</label>
+							</div>
+							
+							<div class="col-lg-4 col-md-4 col-sm-4 col-xs-4 text-right">
+								<label class="MyLabelText" style='color:#000;font-weight: normal;'><? echo $sold_qty;?></label>
+							</div>
+						</div>
+						
+						<div class="row">
+							<div class="col-lg-6 col-md-6 col-sm-6 col-xs-6 text-right">
+								<label class="MyLabelText">Remaining Product Quantity</label>
+							</div>
+							
+							<div class="col-lg-4 col-md-4 col-sm-4 col-xs-4 text-right">
+								<label class="MyLabelText" style='color:#000;font-weight: normal;'><? echo $remaining_qty;?></label>
+							</div>
+						</div>
+						
+						<div class="row">
+							<div class="col-lg-6 col-md-6 col-sm-6 col-xs-6 text-right">
+								<label class="MyLabelText">Total Product Amount</label>
+							</div>
+							
+							<div class="col-lg-4 col-md-4 col-sm-4 col-xs-4 text-right">
+								<label class="MyLabelText" style="color:#000;font-weight: normal;">
+								<? echo GVCurrecyFormat($tot_purchase_amt);?>
+								</label>
+							</div>
+						</div>
+						
+						<div class="row">
+							<div class="col-lg-6 col-md-6 col-sm-6 col-xs-6 text-right">
+								<label class="MyLabelText">Total Sold Product Amount</label>
+							</div>
+							
+							<div class="col-lg-4 col-md-4 col-sm-4 col-xs-4 text-right">
+								<label class="MyLabelText" style="color:#000;font-weight: normal;">
+								<? echo GVCurrecyFormat($tot_sales_amt);?>
+								</label>
+							</div>
+						</div>
+						
+						<div class="row">
+							<div class="col-lg-6 col-md-6 col-sm-6 col-xs-6 text-right">
+								<label class="MyLabelText">Remaining Product Amount</label>
+							</div>
+							
+							<div class="col-lg-4 col-md-4 col-sm-4 col-xs-4 text-right">
+								<label class="MyLabelText" style="color:#000;font-weight: normal;">
+								<? echo GVCurrecyFormat($remaining_stock_amt);?>
+								</label>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+		
+		<div class="row">
+		<div class="col-lg-12 col-md-12 col-sm-12 col-xs-12 text-center">
+		<div class="card" style='margin-top:10px;'>
+			<div class="card-header" style='background-color: #E7E9EB;'><label class='MyLabelText' style='margin:0px;padding:0px;'>Overall Report Chart</label></div>
+			<div class="card-body" id='AccountDIV' style='overflow-y:auto;width:100%;'>
+				<div class="row">
+					<div class="col-lg-12 col-md-12 col-sm-12 col-xs-12 text-center">
+						<? include_once("../backend/gv_rgraph.php"); ?>
+						
+						<div>
+						    <div id="Overall_Report_Chart" style="height:350px;width:1000px;"></div>
+						</div>
+						
+						<script type='text/javascript'>
+							var _graphArr = <? echo json_encode($overallReportArr) ?>;
+						
+							var chartDom = document.getElementById('Overall_Report_Chart');
+							var myChart = echarts.init(chartDom);
+							var option;
+							
+							option = {
+							tooltip: {
+							formatter: '{b}: \u20B9 {c}'
+							},
+							xAxis: {
+							type: 'category',
+							data: ['Overall','Initial','Purchased','Sales','Discount','Outstanding','Profit'],
+							  axisLabel: {
+						            rotate: 45,
+							    textStyle: {
+							      fontSize: 12, 
+							      color: '#000'
+							    }
+							  }
+							},
+							yAxis: {
+							type: 'value',
+							  axisLabel: {
+							    formatter: function (value) {
+							      return '\u20B9 ' + value.toLocaleString('en-IN',{ minimumFractionDigits: 2 });
+							    },
+							    textStyle: {
+							      fontSize: 10, 
+							      color: '#000'
+							    }
+							  }
+							},
+							series: [{
+							type: 'bar',
+							 label: {
+						          show: true,
+						          position: 'top',
+						          formatter: function (params) {
+						            return '\u20B9 ' + Number(params.value).toLocaleString('en-IN', { minimumFractionDigits: 2 });
+						          },
+						          textStyle: {
+							      fontSize: 10, 
+							      color: '#000',
+							      fontWeight: 'bold'
+							    }
+						        },
+							data: [
+							  { value: _graphArr[0], itemStyle: { color: '#bbc0c4' } },
+							  { value: _graphArr[1], itemStyle: { color: '#ff66ff' } },
+							  { value: _graphArr[2], itemStyle: { color: '#ffb380' } },
+							  { value: _graphArr[3], itemStyle: { color: '#809fff' } },
+							  { value: _graphArr[4], itemStyle: { color: '#cc80ff' } },
+							  { value: _graphArr[5], itemStyle: { color: '#ff3333' } },
+							  { value: _graphArr[6], itemStyle: { color: '#00b33c' } },
+							],
+							barWidth: 50
+							}]
+							};
+							
+							myChart.setOption(option);
+						</script>
+					</div>
+				</div>
+			</div>
+		</div>
+		</div>
+		
+		<div class="col-lg-6 col-md-6 col-sm-6 col-xs-6 text-center">
+		<div class="card" style='margin-top:10px;'>
+			<div class="card-header" style='background-color: #E7E9EB;'><label class='MyLabelText' style='margin:0px;padding:0px;'>Product Quantity Report Chart</label></div>
+			<div class="card-body" id='AccountDIV' style='overflow-y:auto;width:100%;'>
+				<div class="row">
+					<div class="col-lg-12 col-md-12 col-sm-12 col-xs-12 text-center">
+						<? include_once("../backend/gv_rgraph.php"); ?>
+						
+						<div>
+						    <div id="Product_QtyReport_Chart" style="height:350px;width:500px;"></div>
+						</div>
+						
+						<script type='text/javascript'>
+						var chartDom = document.getElementById('Product_QtyReport_Chart');
+						var myChart = echarts.init(chartDom);
+						
+						var option = {
+						tooltip: {
+						trigger: 'item',
+						formatter: '{b}: {c} ({d}%)'
+						},
+						series: [{
+						name: 'Fruits',
+						type: 'pie',
+						radius: '50%',
+						center: ['55%', '35%'],
+						data: [
+						  { value: <? echo $sold_qty; ?>, name: 'Sold',itemStyle: { color: 'green' } },
+						  { value: <? echo $remaining_qty; ?>, name: 'Remaining',itemStyle: { color: '#bbc0c4' } },
+						],
+						emphasis: {
+						  itemStyle: {
+						    shadowBlur: 10,
+						    shadowOffsetX: 0,
+						    shadowColor: 'rgba(0, 0, 0, 0.5)'
+						  }
+						},
+						label: {
+						  formatter: '{b}: {c} ({d}%)',
+						  fontSize: 11,
+						  fontWeight: 'bold'
+						}
+						}]
+						};
+						
+						myChart.setOption(option);
+						</script>
+					</div>
+				</div>
+			</div>
+		</div>
+		</div>
+		
+		<div class="col-lg-6 col-md-6 col-sm-6 col-xs-6 text-center">
+		<div class="card" style='margin-top:10px;'>
+			<div class="card-header" style='background-color: #E7E9EB;'><label class='MyLabelText' style='margin:0px;padding:0px;'>Product Amount Report Chart</label></div>
+			<div class="card-body" id='AccountDIV' style='overflow-y:auto;width:100%;'>
+				<div class="row">
+					<div class="col-lg-12 col-md-12 col-sm-12 col-xs-12 text-center">
+						<? include_once("../backend/gv_rgraph.php"); ?>
+						
+						<div>
+						    <div id="productAmt_Report_Chart" style="height:350px;width:450px;"></div>
+						</div>
+						
+						<script type='text/javascript'>
+						var _graphArr1 = <? echo json_encode($productAmtReportArr) ?>;
+						
+						var chartDom = document.getElementById('productAmt_Report_Chart');
+						var myChart = echarts.init(chartDom);
+						var option;
+						
+						option = {
+						grid: {
+						    left: '20%',
+						  },
+						tooltip: {
+						formatter: '{b}: \u20B9 {c}'
+						},
+						xAxis: {
+						type: 'category',
+						data: ['Overall','Sold','Remaining'],
+						  axisLabel: {
+						    rotate: 45,
+						    textStyle: {
+						      fontSize: 12, 
+						      color: '#000'
+						    }
+						  }
+						},
+						yAxis: {
+						type: 'value',
+						  axisLabel: {
+						    formatter: function (value) {
+						      return '\u20B9 ' + value.toLocaleString('en-IN',{ minimumFractionDigits: 2 });
+						    },
+						    textStyle: {
+						      fontSize: 10, 
+						      color: '#000'
+						    }
+						  }
+						},
+						series: [{
+						type: 'bar',
+						 label: {
+					          show: true,
+					          position: 'top',
+					          formatter: function (params) {
+					            return '\u20B9 ' + Number(params.value).toLocaleString('en-IN', { minimumFractionDigits: 2 });
+					          },
+					          textStyle: {
+						      fontSize: 10, 
+						      color: '#000',
+						      fontWeight: 'bold'
+						    }
+					        },
+						data: [
+						  { value: _graphArr1[0], itemStyle: { color: '#bbc0c4' } },
+						  { value: _graphArr1[1], itemStyle: { color: '#00b33c' } },
+						  { value: _graphArr1[2], itemStyle: { color: '#ff3333' } },
+						],
+						barWidth: 50
+						}]
+						};
+						
+						myChart.setOption(option);
+						</script>
+					</div>
+				</div>
+			</div>
+		</div>
+		</div>
+		
+		</div>
+	</div>
+	
+	<? 
+		include("page_footer.html"); 
+	?>

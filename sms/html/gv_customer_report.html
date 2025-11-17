@@ -1,0 +1,296 @@
+	<style>
+	.form-group {
+	    margin-bottom: 0px;
+	}
+	</style>
+	<?
+		include("page_header.html");
+		include("../info/gv_report_info.php"); 
+		include("gv_submenu.html");
+		
+		if($txtSortName == "")
+			$txtSortName = "balance_due";
+		
+		if($txtSortMethod == "" || !in_array($txtSortMethod,$GV_sortingArr))
+			$txtSortMethod = "desc";
+		
+		if($GVorderBy == "")
+			$GVorderBy = $txtSortName." ".$txtSortMethod;
+		
+		$customerCodeArr = array();
+		$customerArr = array();
+		$customerArr[0] = "Non Customer";
+		$MySelectQry = "select customer_name,customer_phone,customer_id,customer_code from customer_info where";
+		$MySelectQry .= " company_id=?";MYSQL_BuildArray("company_id",$company_id,"s");
+		$MySelectQry .= " and delete_ind=?";MYSQL_BuildArray("delete_ind",'0',"s");
+		$MyDbResult =  MyDbQuery($MySelectQry,$_GVParamArray);	
+		while($MyRowData = mysqli_fetch_array($MyDbResult, MYSQLI_ASSOC)) 
+		{
+			$customerArr[GVStringFormat($MyRowData['customer_id'])] = GVStringFormat($MyRowData['customer_code'])." - ".GVStringFormat($MyRowData['customer_name']);
+			$customerArr[GVStringFormat($MyRowData['customer_id'])] .= "<div style='color:#5F5F5F;'><i class='fa fa-mobile-phone' style='font-size: 18px;'></i> ".GVStringFormat($MyRowData['customer_phone'])."</div>";
+			$customerCodeArr[GVStringFormat($MyRowData['customer_code'])] = GVStringFormat($MyRowData['customer_id']);
+		}
+		MyDbFreeResult($MyDbResult);
+		
+		$statusArr = array();
+		$statusArr[""] = "ALL"; 
+		$statusArr["BALANCE"] = "Balanced Customer"; 
+		
+		$page_name = "gv_customer_report";
+		
+		if($GVSaveBtn == "SEARCH" || $GVSaveBtn == "RESET" || $hiddenPostMethod == "STATUS_LIST")
+		{
+			$currentPage = 1;
+			$startRecord = 0;
+			$hiddenPostMethod = "";
+		}
+		
+		$serachOptArr = array();
+		$serachOptArr["CUSTCODE"] = "Customer No";
+		$serachOptArr["CUSTNAME"] = "Customer Name";
+		
+		if($cboSearchOpt == "")
+			$cboSearchOpt = "CUSTCODE";
+		
+		$pagePerRecordArr = array();
+		$pagePerRecordArr[10] = 10;
+		$pagePerRecordArr[25] = 25;
+		$pagePerRecordArr[50] = 50;
+		
+		$FILTER_OPTION = "SAVE";
+		$FILTER_ARR["cboSearchOpt"] = $cboSearchOpt;
+		$FILTER_ARR["txtSearchStr"] = $txtSearchStr;
+		$FILTER_ARR["txtRangeDate"] = $txtRangeDate;
+		$FILTER_ARR["cboStatus"] = $cboStatus;
+		include("../backend/gv_filter_info.php"); 
+		$GVPaginationInd = 1;
+		
+		$txtRangeDateStart = "";
+		$txtRangeDateEnd = "";
+		
+		if($txtRangeDate != "")
+		{
+			$txtRangeDateStart = GVGetDateDBformat(substr($txtRangeDate,0,10));
+			$txtRangeDateEnd = GVGetDateDBformat(substr($txtRangeDate,13,10));
+		}
+		
+		
+		$MySelectQry = "select temp.*,count(customer_id) over() as totCnt from ";
+		$MySelectQry .= "(select sum(tot_qty) as tot_qty,sum(overall_amount) as overall_amount,sum(paid_amt) as paid_amt,";
+		$MySelectQry .= " sum(balance_due) as balance_due,sum(sales_profit) as sales_profit,customer_id";
+		$MySelectQry .= " from sales_info si where ";
+		$MySelectQry .= " company_id=?";MYSQL_BuildArray("company_id",$company_id,"s");
+		$MySelectQry .= " and delete_ind=?";MYSQL_BuildArray("delete_ind","0","s");
+				
+		if($txtRangeDate != "")
+		{
+			if($txtRangeDateStart == $txtRangeDateEnd)
+			{
+				$MySelectQry .= " and sales_date=?";MYSQL_BuildArray("sales_date",$txtRangeDateStart,"s");
+			}
+			else
+			{
+				$MySelectQry .= " and sales_date between ? ";MYSQL_BuildArray("sales_date",$txtRangeDateStart,"s");
+				$MySelectQry .= " and ?";MYSQL_BuildArray("sales_date",$txtRangeDateEnd,"s");
+			}
+		}
+		
+		if($cboSearchOpt == "CUSTCODE" && strlen($txtSearchStr) > 0)
+		{
+			if(array_key_exists(strtoupper($txtSearchStr), $customerCodeArr))
+				$customer_id = $customerCodeArr[strtoupper($txtSearchStr)];
+			else
+				$customer_id = -1;
+				
+			$MySelectQry .= " and customer_id=?";MYSQL_BuildArray("customer_id",$customer_id,"s");
+		}
+		else if($cboSearchOpt == "CUSTNAME" && strlen($txtSearchStr) > 0)
+		{
+			$MySelectQry .= " and exists(select customer_id from customer_info cust where";
+			$MySelectQry .= " cust.company_id=?";MYSQL_BuildArray("company_id",$company_id,"s");
+			$MySelectQry .= " and cust.delete_ind=?";MYSQL_BuildArray("delete_ind","0","s");
+			$MySelectQry .= " and cust.customer_name like CONCAT('%', ?, '%')";MYSQL_BuildArray("customer_name",$txtSearchStr,"s");
+			$MySelectQry .= " and cust.customer_id=si.customer_id)";
+		}
+						
+		$MySelectQry .= " GROUP by customer_id) as temp ";
+		
+		if($cboStatus == "BALANCE")
+		{
+			$MySelectQry .= " where balance_due>0";
+		}
+		
+		$MySelectQry .= " order by $GVorderBy LIMIT $numRecordPerPage offset $startRecord";
+		$MyDbResult =  MyDbQuery($MySelectQry,$_GVParamArray);
+		$MyNumRows = MyDbNumRows($MyDbResult);
+		$MyRowData = mysqli_fetch_array($MyDbResult, MYSQLI_ASSOC);
+		$totNumRecord = GVStringFormat($MyRowData['totCnt']);
+	?>
+	<div class="container-fluid">
+		<div class="row" style='padding: 12px 7px 0px 0px;'>
+			<div class="col-lg-6 col-md-6 col-sm-6 col-xs-6">
+				<label class="MyTextHeading"><i class='fa fa-group'></i><span>Customer Report</span></label>
+			</div>
+			
+			<div class="col-lg-3 col-md-3 col-sm-3 col-xs-3">
+			</div>
+			
+			<div class="col-lg-3 col-md-3 col-sm-3 col-xs-3">
+			<? GVComboBox("INPUT","cboStatus","cboStatus",$statusArr,"","width:120px;margin-left: 5px;margin-bottom: 5px;","onchange='GVformSubmitCall(\"STATUS_LIST\");'"); ?>
+			</div>
+		</div>
+		
+		<div class='GVSearchBar'>
+			<?
+			echo "<label class='MyLabelText text-left' style='margin:3px;'>Search</label>";
+			GVComboBox("INPUT","cboSearchOpt","cboSearchOpt",$serachOptArr,"","width:150px;margin-left: 5px;","onchange='cboSearchOpt_onchanged(this.value);'");
+			GVTextBox("INPUT","txtSearchStr","txtSearchStr","","width:200px;margin-left: 5px;","maxlength='35' placeholder='Customer Name'"); 
+			GVDateRangeBox("INPUT", "txtRangeDate", "txtRangeDate", "", "margin-left:5px;width:180px;border-radius: 5px;", "readonly placeholder='Sales Date'");
+					
+			GVimageButton("SEARCH","GVSaveBtn","GVSearchBtn",GVimage("image","image","/gvtech/images/search.png","","","width='15'"),"submit","SECONDARY","margin-left:5px;height:27px;font-size:11px;","");  
+			GVimageButton("RESET","GVSaveBtn","GVResetBtn",GVimage("image","image","/gvtech/images/Refresh.png","","","width='15'"),"button","SECONDARY","margin-left:5px;height:27px;font-size:11px;","onclick='reset_btnClick();'");  
+			
+			echo "<label class='MyLabelText text-left' style='margin:3px;margin-left: 5px;'>Show</label>";
+			GVComboBox("INPUT","numRecordPerPage","numRecordPerPage",$pagePerRecordArr,"","margin-left: 5px;width:50px;","onchange='GVPagePerRecord_onchange();'"); 
+			echo "<label class='MyLabelText text-left' style='margin:3px;margin-left: 2px;'>Records</label>";
+			
+			$pdfLink = "../backend/gv_page_redirect.php?SkipSSDataInd=1".GVqueryString("LoadHtmlPage=gv_customer_report_export&GVmenu=$GVmenu&cboSearchOpt=$cboSearchOpt&txtSearchStr=$txtSearchStr&GVorderBy=$GVorderBy&cboStatus=$cboStatus&txtRangeDate=$txtRangeDate");
+			GVanchor("GVPdf","GVPdf","$pdfLink","",GVimage("GVPdf","GVPdf","/gvtech/images/pdf.png","","cursor:pointer;float:right;margin-left: auto;width:27px;height:27px;margin-left:10px;padding:3px;","title='Export to PDF'"),"","");
+			?>
+		</div>
+		
+		<? if($totNumRecord > 0) { ?>
+		
+		<div id='mainTableID' class="table-responsive GVtableHeadDIV" style='overflow-y:auto;width:100%;'>          
+			<table class="table table-hover GVtableHeadFixed" style='width:100%;margin-top:0px !important;'>
+				<thead>
+					<tr>
+						<th width='5%' class='GVtableHead text-center'>S.No</th>
+						<th width='25%' class='GVtableHead text-left'>Customer Name</th>
+						<th width='12%' class='GVtableHead text-right'>Total Qty<? GVSortMethod("tot_qty",$txtSortMethod); ?></th>
+						<th width='12%' class='GVtableHead text-right'>Overall&nbsp;(&nbsp;<i class='fa fa-rupee'></i>&nbsp;)<? GVSortMethod("overall_amount",$txtSortMethod); ?></th>
+						<th width='12%' class='GVtableHead text-right'>Paid&nbsp;(&nbsp;<i class='fa fa-rupee'></i>&nbsp;)<? GVSortMethod("paid_amt",$txtSortMethod); ?></th>
+						<th width='12%' class='GVtableHead text-right'>Balance&nbsp;(&nbsp;<i class='fa fa-rupee'></i>&nbsp;)<? GVSortMethod("balance_due",$txtSortMethod); ?></th>
+						<th width='12%' class='GVtableHead text-right'>Profit&nbsp;(&nbsp;<i class='fa fa-rupee'></i>&nbsp;)<? GVSortMethod("sales_profit",$txtSortMethod); ?></th>
+						<th width='10%' class='GVtableHead text-center'>Action</th>
+					</tr>
+				</thead>
+				
+				<tbody>
+					<?
+					$recCount = $startRecord;
+					do
+					{
+						$customer_id_temp = GVStringFormat($MyRowData['customer_id']);
+						$customerCodeTemp = "CR".$customer_id_temp;
+						$customer_name = $customerArr[$customer_id_temp];
+						$tot_qty = GVStringFormat($MyRowData['tot_qty']);
+						$overall_amount = GVformatAmount(GVStringFormat($MyRowData['overall_amount']));
+						$paid_amt = GVformatAmount(GVStringFormat($MyRowData['paid_amt']));
+						$balance_due = GVformatAmount(GVStringFormat($MyRowData['balance_due']));
+						$sales_profit = GVformatAmount(GVStringFormat($MyRowData['sales_profit']));
+						
+						$recCount++;
+						?>
+						
+						<tr>
+							<td class='GVtableData text-center'><? echo $recCount; ?></td>
+							<td class='GVtableData text-left'><? echo $customer_name; ?></td>
+							<td class='GVtableData text-right'><? echo $tot_qty; ?></td>
+							<td class='GVtableData text-right'><? echo GVCurrecyFormat($overall_amount, 1); ?></td>
+							<td class='GVtableData text-right'><? echo GVCurrecyFormat($paid_amt, 1); ?></td>
+							<td class='GVtableData text-right'><? echo GVCurrecyFormat($balance_due, 1); ?></td>
+							<td class='GVtableData text-right'><? echo GVCurrecyFormat($sales_profit, 1); ?></td>
+							<td class='GVtableData text-center'>
+							<?
+								$editLink = GVstringEncrption("LoadHtmlPage=gv_sales_list&GVmenu=$GVmenu&cboSearchOpt=CUSTCODE&txtSearchStr=$customerCodeTemp&fromReportLinkInd=1&txtRangeDate=$txtRangeDate&fromPage=gv_customer_report");
+								echo GVimage("GVview","GVview","/gvtech/images/view.png","","cursor:pointer;","width='20' title='View' onclick=GVcallLoader();setGVPageSession('$editLink','$GV_PageSSDATA',1);");
+								
+								if($balance_due > 0)
+								{
+									$PayURL = GVstringEncrption("LoadHtmlPage=gv_sales_overall_pay&GVmenu=$GVmenu&&GVsubMenu=$GVsubMenu&GVID1=$customer_id_temp");
+									echo GVimage("GVPayBtn","GVPayBtn","/gvtech/images/Money.png","","margin-left:10px;cursor:pointer;","width='20' title='Pay' onclick=setGVPopupSession(\"$PayURL\",\"$GV_PopupSSDATA\",700,400);");
+								}
+							?>
+							</td>
+						</tr>
+						
+					<?
+					}
+					while($MyRowData = mysqli_fetch_array($MyDbResult, MYSQLI_ASSOC));
+					?>
+					
+				</tbody>
+			</table>
+		</div>
+		<? } else { ?>
+			<div class="row" style='padding-top:75px;'>
+				<div class="col-lg-12 col-md-12 col-sm-12 col-xs-12 text-center">
+					<? if(strlen($txtSearchStr) > 0 || $cboStatus != "" || $txtRangeDate != "") { ?>
+					<label class="MyTextWarning"><? echo GVimage("image","image","/gvtech/images/search.png","","","width='75'");  ?><br>No data found Please change the filter</label><br>
+					<? GVInputButton("Reset","GVSaveBtn","GVSaveBtn","submit","SECONDARY","","onclick='reset_btnClick();'");?>
+					<? } else if($totNumRecord == 0) { ?>
+					<label class="MyTextWarning"><i class='fa fa-shopping-cart'></i><br><br>You don't have any Sales Information</label>
+					<? } ?>
+				</div>
+			</div>
+		<? } ?>
+		
+		<? include("gv_pagination.html"); ?>
+	</div>
+	
+	<? include("page_footer.html"); ?>
+	
+	<script type='text/javascript'>
+		var windowHeight = window.innerHeight * 0.71;
+		
+		if(document.getElementById("mainTableID"))
+		{
+			document.getElementById("mainTableID").style.maxHeight = windowHeight;
+			document.getElementById("mainTableID").style.minHeight = windowHeight;
+		}
+		 
+		function cboSearchOpt_onchanged(value)
+		{
+			var _selectedFilter = $("#cboSearchOpt option:selected").text();
+			$("#txtSearchStr").attr("placeholder", _selectedFilter);
+		}
+		
+		function reset_btnClick()
+		{
+			$('#txtRangeDate').val("");
+			$('#txtRangeDate').attr("placeholder", "Date Range");
+			$("#cboSearchOpt").val("NAME");
+			$("#cboStatus").val("");
+			$("#txtSearchStr").val("");
+			var _selectedFilter = $("#cboSearchOpt option:selected").text();
+			$("#txtSearchStr").attr("placeholder", _selectedFilter);
+			GVcallLoader();
+			GVformPost();
+		}
+		
+		cboSearchOpt_onchanged('<? echo $cboSearchOpt; ?>');
+		
+		$(function() {
+		    var start = moment().subtract(29, 'days');
+		    var end = moment();
+		
+		    function cb(start, end) {
+		        $('#txtRangeDate').val(start.format('DD-MM-YYYY') + ' - ' + end.format('DD-MM-YYYY'));
+		    }
+		
+		    $('#DR_txtRangeDate').daterangepicker({
+		    	locale: { format: 'DD-MM-YYYY' },
+		        startDate: start,
+		        endDate: end,
+		        ranges: {
+		           'Today': [moment(), moment()],
+		           'Yesterday': [moment().subtract(1, 'days'), moment().subtract(1, 'days')],
+		           'Last 7 Days': [moment().subtract(6, 'days'), moment()],
+		           'Last 30 Days': [moment().subtract(29, 'days'), moment()],
+		           'This Month': [moment().startOf('month'), moment().endOf('month')],
+		           'Last Month': [moment().subtract(1, 'month').startOf('month'), moment().subtract(1, 'month').endOf('month')]
+		        }
+		    }, cb);
+		});
+		</script>

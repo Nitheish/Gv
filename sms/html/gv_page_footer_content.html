@@ -1,0 +1,56 @@
+<?
+	if($GVPaginationInd == 1)
+	{
+		$MySelectQry = "select gv_num_page_record from gv_page_setup where";
+		$MySelectQry .= " company_id=?";MYSQL_BuildArray("company_id",$company_id,"s");
+		$MySelectQry .= " and gv_login_id=?";MYSQL_BuildArray("gv_login_id",$gv_login_id,"s");
+		$MySelectQry .= " and gv_page_name=?";MYSQL_BuildArray("gv_page_name",$LoadHtmlPage,"s");
+		$MyDbResult =  MyDbQuery($MySelectQry,$_GVParamArray);
+		$MyNumRows = MyDbNumRows($MyDbResult);
+		
+		if($MyNumRows == 0)
+		{
+			$_GVParamArray[] = array("KEY"=>"company_id", "VAL"=>$company_id, "TYPE"=>"s");
+			$_GVParamArray[] = array("KEY"=>"gv_num_page_record", "VAL"=>$numRecordPerPage, "TYPE"=>"s");
+			$_GVParamArray[] = array("KEY"=>"gv_page_name", "VAL"=>$LoadHtmlPage, "TYPE"=>"s");
+			$_GVParamArray[] = array("KEY"=>"gv_login_id", "VAL"=>$gv_login_id, "TYPE"=>"s");
+			
+			if($txtSortName != "")
+				$_GVParamArray[] = array("KEY"=>"gv_sort_name", "VAL"=>$txtSortName, "TYPE"=>"s");
+			
+			if($txtSortMethod != "")
+				$_GVParamArray[] = array("KEY"=>"gv_sort_type", "VAL"=>$txtSortMethod, "TYPE"=>"s");
+			
+			$outParamArr = GVgetQueryString($_GVParamArray);
+		
+			$MyInsertQry = "insert into gv_page_setup (".$outParamArr['_INSERT_SQLQRY_FIELDS'].") values(".$outParamArr['_INSERT_SQLQRY_VAL'].")";
+			MyDbQuery($MyInsertQry, $_GVParamArray);
+		}
+		else
+		{
+			if($txtSortName != "")
+				$_GVParamArray[] = array("KEY"=>"gv_sort_name", "VAL"=>$txtSortName, "TYPE"=>"s");
+			
+			if($txtSortMethod != "")
+				$_GVParamArray[] = array("KEY"=>"gv_sort_type", "VAL"=>$txtSortMethod, "TYPE"=>"s");
+			
+			$_GVParamArray[] = array("KEY"=>"gv_num_page_record", "VAL"=>$numRecordPerPage, "TYPE"=>"s");
+			
+			$outParamArr = GVgetQueryString($_GVParamArray);
+
+			$MyUpdateQry = "update gv_page_setup set ".$outParamArr['_UPDATE_SQLQRY_VAL']." where ";
+			$MyUpdateQry .= " company_id=?";MYSQL_BuildArray("company_id",$company_id,"s");
+			$MyUpdateQry .= " and gv_login_id=?";MYSQL_BuildArray("gv_login_id",$gv_login_id,"s");
+			$MyUpdateQry .= " and gv_page_name=?";MYSQL_BuildArray("gv_page_name",$LoadHtmlPage,"s");
+			MyDbQuery($MyUpdateQry, $_GVParamArray);
+		}
+		MyDbFreeResult($MyDbResult);
+	}
+	
+	GVHiddenInput("currentPage","currentPage","");
+	GVHiddenInput("txtSortName","txtSortName","");
+	GVHiddenInput("txtSortMethod","txtSortMethod","");
+	GVHiddenInput("hiddenPostMethod","hiddenPostMethod","");
+	
+	echo GVHiddenString("GVmenu=$GVmenu&GVsubMenu=$GVsubMenu&GVID=$GVID&GVID1=$GVID1&GVID2=$GVID2&GVSTEP=$GVSTEP&GVSTEP1=$GVSTEP1");
+?>

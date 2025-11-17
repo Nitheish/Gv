@@ -1,0 +1,19 @@
+<div class="tab-menu">
+	<ul class="nav nav-tabs" id='GvTabNav'>
+		<? 
+		for($GVtabMenuCount = 0;$GVtabMenuCount < count($GVtabMenuArr); $GVtabMenuCount++) 
+		{
+			$linkDesc = $GVtabMenuArr[$GVtabMenuCount]["DESC"];
+			$linkImage = $GVtabMenuArr[$GVtabMenuCount]["IMG"];
+			$linkTag = $GVtabMenuArr[$GVtabMenuCount]["TAG"];
+			$linkURL = $GVtabMenuArr[$GVtabMenuCount]["LINK"];
+			$linkClass = "";
+			
+			if($GVtabMenu == $linkTag)
+				$linkClass = "active";
+			
+			echo "<li class='nav-item $linkClass' onclick='GViframeDirect(\"$linkURL\");GVcallLoader();'>$linkImage<span>$linkDesc</span></li>";	
+		}
+		?>
+	</ul>
+</div>

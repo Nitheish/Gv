@@ -1,0 +1,654 @@
+	<? 
+		include("page_header.html");
+		include("../info/gv_purchase_info.php"); 
+		
+		if($ErrorInd == 0)
+		{
+			$cboVendor = 0;
+			$txtPurchaseDate = GVGetCurrentDate();
+			$rdoPurchaseTypeInd = 0;
+			$txtRemarks = "";
+			$txtPurchaseCode = "";
+			$rdoDiscountInd = "0";
+			$txtPercent = "0.00";
+			$txtDiscountAmount = "0.00";
+			$txtTransportAmount = "0.00";
+			$txtTotalAmount = "0.00";
+			$txtTotalQty = "0";
+			$txtOverallAmount = "0.00";
+			$txtTotalGSTAmount = "0.00";
+			
+			if($GVSTEP == "EDIT")
+			{
+				$MySelectQry = "select * from purchase_info where";
+				$MySelectQry .= " company_id=?";MYSQL_BuildArray("company_id",$company_id,"s");
+				$MySelectQry .= " and purchase_id=?";MYSQL_BuildArray("purchase_id",$GVID,"s");
+				$MyDbResult =  MyDbQuery($MySelectQry,$_GVParamArray);	
+				if($MyRowData = mysqli_fetch_array($MyDbResult, MYSQLI_ASSOC)) 
+				{
+					$txtPurchaseCode = GVStringFormat($MyRowData['purchase_code']);
+					$cboVendor = GVStringFormat($MyRowData['vendor_id']);
+					$txtPurchaseDate = GVGetUserDateformat(GVStringFormat($MyRowData['purchase_date']));
+					$rdoPurchaseTypeInd = GVStringFormat($MyRowData['purchase_type']);
+					$txtRemarks = GVStringFormat($MyRowData['remarks']);
+					$txtTotalQty = GVStringFormat($MyRowData['tot_qty']);
+					$rdoDiscountInd = GVStringFormat($MyRowData['discount_type']);
+					
+					$txtPercent = GVformatAmount(GVStringFormat($MyRowData['discount_percent']));
+					$txtDiscountAmount = GVformatAmount(GVStringFormat($MyRowData['discount_amount']));
+					$txtTransportAmount = GVformatAmount(GVStringFormat($MyRowData['ship_hand_amt']));
+					$txtTotalAmount = GVformatAmount(GVStringFormat($MyRowData['tot_amount']));
+					$txtOverallAmount = GVformatAmount(GVStringFormat($MyRowData['overall_amount']));
+				}
+				MyDbFreeResult($MyDbResult);
+			}
+		}
+	?>
+	<style>
+	.form-group {
+	    margin-bottom: 0px;
+	}
+	.table-hover>tbody>tr:hover {
+	    background-color: #fff;
+	}
+	</style>
+	<div class="container-fluid">
+		<div class="row" style='padding: 12px 7px 0px 0px;'>
+			<div class="col-lg-8 col-md-8 col-sm-8 col-xs-8">
+				<label class="MyTextHeading"><i class='fa fa-cart-arrow-down'></i><span>Purchase Information</span></label>
+			</div>
+			
+			<div class="col-lg-2 col-md-2 col-sm-2 col-xs-2 text-right">
+				<?if($GVSTEP == "EDIT") { ?>
+				<span class='badge badge-secondary' style='font-size:12px;padding:10px;'>Purchase No : &nbsp;<? echo $txtPurchaseCode; ?></span>
+				<? } ?>
+			</div>
+			
+			<div class="col-lg-2 col-md-2 col-sm-2 col-xs-2 text-right">
+				<? $GVBackSummaryLink = GVstringEncrption("LoadHtmlPage=gv_purchase_list&GVmenu=$GVmenu"); ?>
+				<span class="badge badge-secondary" style='padding:8px;cursor:pointer;' onclick="GVcallLoader();setGVPageSession('<? echo $GVBackSummaryLink;?>','<? echo $GV_PageSSDATA; ?>',1);" title="Back to Purchase List"><i class='fa fa-mail-reply' style='font-size:14px;'></i></span>
+			</div>
+		</div>
+		
+		<div class="row" style='margin-top:7px;margin-bottom:7px;'>
+			<div class="col-lg-1 col-md-1 col-sm-1 col-xs-1">
+				<label class='MyLabelText text-right' style='margin:3px;'>Vendor</label>
+			</div>
+			
+			<div class="col-lg-3 col-md-3 col-sm-3 col-xs-3">
+				<? GVComboBox("INPUT","cboVendor","cboVendor",$vendorArr,"","width:150px;margin-left: 5px;","onchange='cboVendor_onchanged(this.value);'"); ?>
+			</div>
+			
+			<div class="col-lg-1 col-md-1 col-sm-1 col-xs-1">
+				<label class='MyLabelText text-right'>Date</label>
+			</div>
+			
+			<div class="col-lg-2 col-md-2 col-sm-2 col-xs-2">
+				<? GVDateBox("INPUT","txtPurchaseDate","txtPurchaseDate","","","maxlength='10'");  ?>
+			</div>
+			
+			<div class="col-lg-1 col-md-1 col-sm-1 col-xs-1">
+				<label class='MyLabelText text-right'>Bill Type</label>
+			</div>
+			
+			<div class="col-lg-2 col-md-2 col-sm-2 col-xs-2" style='padding-top: 5px;'>
+				<?
+					GVRadioButton("Credit","rdoPurchaseTypeInd","rdoPurchaseTypeInd1","1","","",""); 
+					GVRadioButton("Cash","rdoPurchaseTypeInd","rdoPurchaseTypeInd0","0","","","");
+				?> 
+			</div>
+		</div>
+		
+		<? GVErrBox("productListErr"); ?>
+		
+		<div id='mainTableID' class="table-responsive GVtableHeadDIV" style='border:1px solid #CCC;overflow-y:auto;width:100%;'>          
+			<table id='itemTable' class="table table-hover GVtableHeadFixed" style='width:100%;margin-top:0px !important;'>
+				<thead>
+					<tr>
+						<th width='12%' class='GVtableHead text-left'>Product Code</th>
+						<th width='23%' class='GVtableHead text-left'>Product Name</th>
+						<th width='8%' class='GVtableHead text-left'>Quantity</th>
+						<th width='14%' class='GVtableHead text-left'>Rate</th>
+						<th width='10%' class='GVtableHead text-left'>GST Percentage</th>
+						<th width='14%' class='GVtableHead text-left'>GST Amount</th>
+						<th width='14%' class='GVtableHead text-left'>Amount</th>
+						<th width='5%' class='GVtableHead text-center'>&nbsp</th>
+					</tr>
+				</thead>
+				
+				<tbody id='itemDIV'>
+					<?
+						if($GVSTEP == "EDIT")
+						{
+							$rowCount = 1;
+							
+							$MySelectQry = "select * from purchase_product where";
+							$MySelectQry .= " company_id=?";MYSQL_BuildArray("company_id",$company_id,"s");
+							$MySelectQry .= " and purchase_id=?";MYSQL_BuildArray("purchase_id",$GVID,"s");
+							$MyDbResult =  MyDbQuery($MySelectQry,$_GVParamArray);	
+							while($MyRowData = mysqli_fetch_array($MyDbResult, MYSQLI_ASSOC)) 
+							{
+								$product_id = GVStringFormat($MyRowData['product_id']);
+								$product_quantity = GVStringFormat($MyRowData['product_quantity']);
+								$product_price = GVformatAmount(GVStringFormat($MyRowData['product_price']));
+								$gst_percent = GVformatAmount(GVStringFormat($MyRowData['gst_percent']));
+								$gst_amt = GVformatAmount(GVStringFormat($MyRowData['gst_amt']));
+								$product_tot_amount = GVformatAmount(GVStringFormat($MyRowData['product_tot_amount']));
+								
+								$tableRowID = "itemRec".$rowCount;
+								$txtProductCode = "txtProductCode".$rowCount;
+								$cboProductName = "cboProductName".$rowCount;
+								$txtQuantity = "txtQuantity".$rowCount;
+								$txtRate = "txtRate".$rowCount;
+								$txtAmount = "txtAmount".$rowCount;
+								$txtGSTPercent = "txtGSTPercent".$rowCount;
+								$txtGSTAmount = "txtGSTAmount".$rowCount;
+								
+								${$txtProductCode} = "PT".$product_id;
+								${$cboProductName} = $product_id;
+								${$txtQuantity} = $product_quantity;
+								${$txtRate} = $product_price;
+								${$txtAmount} = $product_tot_amount;
+								${$txtGSTPercent} = $gst_percent;
+								${$txtGSTAmount} = $gst_amt;
+					
+								echo "<tr id='$tableRowID' style='line-height: 1.5;'>";
+									echo "<td>";
+									GVTextBoxWithList("INPUT","$txtProductCode","$txtProductCode","txtProductCode","text-transform:uppercase;border-radius: 5px !important;","placeholder='Product Code'",$ProductCodeListArr);
+									echo "</td>";
+									
+									echo "<td>";
+									GVComboBox("INPUT","$cboProductName","$cboProductName",$ProductArr,"","width:150px;margin-left: 5px;","onchange='cboProductName_onchanged(this.id,this.value);'");
+									echo "</td>";
+									
+									echo "<td>";
+									GVTextBox("INPUT","$txtQuantity","$txtQuantity","txtQuantity","text-align:right;","maxlength='3' placeholder='Quantity' onkeypress='return isNumberKey(this)'");
+									echo "</td>";
+									
+									echo "<td>";
+									GVAmountBox("INPUT","$txtRate","$txtRate","txtRate","","placeholder='Rate'");
+									echo "</td>";
+									
+									echo "<td>";
+									GVPercentBox("INPUT","$txtGSTPercent","$txtGSTPercent","txtGSTPercent","","maxlength='6' placeholder='Percentage' onkeypress='return isMoneyKey(this, this.value);'");
+									echo "</td>";
+									
+									echo "<td>";
+									GVAmountBox("INPUT","$txtGSTAmount","$txtGSTAmount","","","placeholder='Amount' disabled");
+									echo "</td>";
+										
+									echo "<td>";
+									GVAmountBox("INPUT","$txtAmount","$txtAmount","","","placeholder='Amount' disabled");
+									echo "</td>";
+									
+									echo "<td>";
+									if($rowCount != 1)
+									{
+										echo GVimage("delete","delete","/gvtech/images/delete.png","","cursor:pointer;padding-top: 7px;","width='15' title='Delete' onclick=itemDelete('$tableRowID');");
+									}
+									echo "</td>";
+								echo "</tr>";
+								
+								echo "<input type='hidden' name='ItemList[$rowCount]' id='ItemList_$rowCount' value='$product_id'>";
+								
+								$rowCount++;
+							}
+							MyDbFreeResult($MyDbResult);
+						}
+						else
+						{
+							if($ErrorInd == 0)
+								$totItem = 1;
+							
+							for($rowCount = 1;$rowCount <= $totItem; $rowCount++)
+							{
+								$tableRowID = "itemRec".$rowCount;
+								$txtProductCode = "txtProductCode".$rowCount;
+								$cboProductName = "cboProductName".$rowCount;
+								$txtQuantity = "txtQuantity".$rowCount;
+								$txtRate = "txtRate".$rowCount;
+								$txtAmount = "txtAmount".$rowCount;
+								$txtGSTPercent = "txtGSTPercent".$rowCount;
+								$txtGSTAmount = "txtGSTAmount".$rowCount;
+								
+								if($ErrorInd == 0)
+								{
+									${$txtQuantity} = 0;
+									${$txtRate} = "0.00";
+									${$txtAmount} = "0.00";
+									${$txtGSTPercent} = "0.00";
+									${$txtGSTAmount} = "0.00";
+								}
+								
+								if($ErrorInd == 0 || ($ErrorInd == 1 && $ItemList[$rowCount] != "") || $rowCount == 1)
+								{
+									echo "<tr id='$tableRowID' style='line-height: 1.5;'>";
+										echo "<td>";
+										GVTextBoxWithList("INPUT","$txtProductCode","$txtProductCode","txtProductCode","text-transform:uppercase;border-radius: 5px !important;","placeholder='Product Code'",$ProductCodeListArr);
+										echo "</td>";
+										
+										echo "<td>";
+										GVComboBox("INPUT","$cboProductName","$cboProductName",$ProductArr,"","width:150px;margin-left: 5px;","onchange='cboProductName_onchanged(this.id,this.value);'");
+										echo "</td>";
+										
+										echo "<td>";
+										GVTextBox("INPUT","$txtQuantity","$txtQuantity","txtQuantity","text-align:right;","maxlength='3' placeholder='Quantity' onkeypress='return isNumberKey(this)'");
+										echo "</td>";
+										
+										echo "<td>";
+										GVAmountBox("INPUT","$txtRate","$txtRate","txtRate","","placeholder='Rate'");
+										echo "</td>";
+										
+										echo "<td>";
+										GVPercentBox("INPUT","$txtGSTPercent","$txtGSTPercent","txtGSTPercent","","maxlength='6' placeholder='Percentage' onkeypress='return isMoneyKey(this, this.value);'");
+										echo "</td>";
+										
+										echo "<td>";
+										GVAmountBox("INPUT","$txtGSTAmount","$txtGSTAmount","","","placeholder='Amount' disabled");
+										echo "</td>";
+										
+										echo "<td>";
+										GVAmountBox("INPUT","$txtAmount","$txtAmount","","","placeholder='Amount' disabled");
+										echo "</td>";
+										
+										echo "<td>";
+										
+										if($rowCount != 1)
+										{
+											echo GVimage("delete","delete","/gvtech/images/delete.png","","cursor:pointer;padding-top: 7px;","width='15' title='Delete' onclick=itemDelete('$tableRowID');");
+										}
+										echo "</td>";
+									echo "</tr>";
+									
+									echo "<input type='hidden' name='ItemList[$rowCount]' id='ItemList_$rowCount' value='".$ItemList[$rowCount]."'>";
+								}
+							}
+						}
+					?>
+				</tbody>
+			</table>
+			
+			<div style='margin-left:15px;;'>
+				<div class="dropdown">
+				  <button type="button" class="btn btn-secondary dropdown-toggle" data-toggle="dropdown">
+				   Add New Items
+				  </button>
+				  <div class="dropdown-menu">
+					<?
+						$itemLink1 = "../backend/gv_custom_call.php?SkipSSDataInd=1".GVqueryString("GVSTEP=PURCHASEITEM&GVID=1");
+						$itemLink2 = "../backend/gv_custom_call.php?SkipSSDataInd=1".GVqueryString("GVSTEP=PURCHASEITEM&GVID=2");
+						$itemLink3 = "../backend/gv_custom_call.php?SkipSSDataInd=1".GVqueryString("GVSTEP=PURCHASEITEM&GVID=3");
+						$itemLink4 = "../backend/gv_custom_call.php?SkipSSDataInd=1".GVqueryString("GVSTEP=PURCHASEITEM&GVID=4");
+						$itemLink5 = "../backend/gv_custom_call.php?SkipSSDataInd=1".GVqueryString("GVSTEP=PURCHASEITEM&GVID=5");
+					?>
+					
+				    <a class="dropdown-item" href="#" onclick="AddNewItems('<? echo $itemLink1;?>');">Add 1 Item</a>
+				    <a class="dropdown-item" href="#" onclick="AddNewItems('<? echo $itemLink2;?>');">Add 2 Items</a>
+				    <a class="dropdown-item" href="#" onclick="AddNewItems('<? echo $itemLink3;?>');">Add 3 Items</a>
+				    <a class="dropdown-item" href="#" onclick="AddNewItems('<? echo $itemLink4;?>');">Add 4 Items</a>
+				    <a class="dropdown-item" href="#" onclick="AddNewItems('<? echo $itemLink5;?>');">Add 5 Items</a>
+				  </div>
+				</div>
+			</div>
+		</div>
+		
+		<div class="row" style='margin-top:7px;'>
+			<div class="col-lg-4 col-md-4 col-sm-4 col-xs-4">
+				<div class="row">
+					<div class="col-lg-2 col-md-2 col-sm-2 col-xs-2">
+						<label class="MyLabelText">Remarks</label>
+					</div>
+					
+					<div class="col-lg-10 col-md-10 col-sm-10 col-xs-10">
+						<? GVTextArea("INPUT","txtRemarks","txtRemarks","","","maxlength='100' placeholder='Remarks'"); ?> 
+					</div>
+				</div>
+				
+				<div class="row" style='margin-top:5px;'>
+					<div class="col-lg-6 col-md-6 col-sm-6 col-xs-6 text-right">
+						<label class="MyLabelText">Total GST Amount</label>
+					</div>
+					
+					<div class="col-lg-6 col-md-6 col-sm-6 col-xs-6">
+						<? GVAmountBox("INPUT","txtTotalGSTAmount","txtTotalGSTAmount","","","placeholder='Total GST Amount' disabled"); ?> 
+					</div>
+				</div>
+			</div>
+			
+			<div class="col-lg-4 col-md-4 col-sm-4 col-xs-4">
+				<div class="row">
+					<div class="col-lg-6 col-md-6 col-sm-6 col-xs-6 text-right">
+						<label class="MyLabelText">Discount Type</label>
+					</div>
+					
+					<div class="col-lg-6 col-md-6 col-sm-6 col-xs-6" style='padding-top:5px;'>
+						<? 
+							GVRadioButton("Percentage","rdoDiscountInd","rdoDiscountInd1","1","","","onclick='rdoDiscountInd_onclick();'"); 
+							GVRadioButton("Amount","rdoDiscountInd","rdoDiscountInd0","0","","","onclick='rdoDiscountInd_onclick();'");
+						?> 
+					</div>
+				</div>
+				
+				<div id='DiscountPecentageID' class="row" style='margin-top:5px;display:none;'>
+					<div class="col-lg-6 col-md-6 col-sm-6 col-xs-6 text-right">
+						<label class="MyLabelText">Percentage</label>
+					</div>
+					
+					<div class="col-lg-6 col-md-6 col-sm-6 col-xs-6">
+						<? GVPercentBox("INPUT","txtPercent","txtPercent","","","maxlength='6' placeholder='Percentage' onkeypress='return isMoneyKey(this, this.value);'"); ?> 
+					</div>
+				</div>
+				
+				<div class="row" style='margin-top:5px;'>
+					<div class="col-lg-6 col-md-6 col-sm-6 col-xs-6 text-right">
+						<label class="MyLabelText">Discount Amount</label>
+					</div>
+					
+					<div class="col-lg-6 col-md-6 col-sm-6 col-xs-6">
+						<? GVAmountBox("INPUT","txtDiscountAmount","txtDiscountAmount","","","placeholder='Discount Amount' disabled"); ?> 
+					</div>
+				</div>
+				
+				<div class="row" style='margin-top:5px;'>
+					<div class="col-lg-6 col-md-6 col-sm-6 col-xs-6 text-right">
+						<label class="MyLabelText">Trasport wages</label>
+					</div>
+					
+					<div class="col-lg-6 col-md-6 col-sm-6 col-xs-6">
+						<? GVAmountBox("INPUT","txtTransportAmount","txtTransportAmount","","","placeholder='Trasport wages'"); ?> 
+					</div>
+				</div>
+			</div>
+			
+			<div class="col-lg-4 col-md-4 col-sm-4 col-xs-4">
+				<div class="row" style='margin-top:5px;'>
+					<div class="col-lg-6 col-md-6 col-sm-6 col-xs-6 text-right">
+						<label class="MyLabelText">Total Amount</label>
+					</div>
+					
+					<div class="col-lg-6 col-md-6 col-sm-6 col-xs-6">
+						<? GVAmountBox("INPUT","txtTotalAmount","txtTotalAmount","","","placeholder='Total Amount' disabled"); ?> 
+					</div>
+				</div>
+				
+				<div class="row" style='margin-top:5px;'>
+					<div class="col-lg-6 col-md-6 col-sm-6 col-xs-6 text-right">
+						<label class="MyLabelText">Total Quantity</label>
+					</div>
+					
+					<div class="col-lg-6 col-md-6 col-sm-6 col-xs-6">
+						<? GVTextBox("INPUT","txtTotalQty","txtTotalQty","","text-align:right;","maxlength='3' placeholder='Total Quantity' onkeypress='return isNumberKey(this)' disabled"); ?> 
+					</div>
+				</div>
+				
+				<div class="row" style='margin-top:5px;'>
+					<div class="col-lg-6 col-md-6 col-sm-6 col-xs-6 text-right">
+						<label class="MyLabelText">Overall Amount</label>
+					</div>
+					
+					<div class="col-lg-6 col-md-6 col-sm-6 col-xs-6">
+						<? GVAmountBox("INPUT","txtOverallAmount","txtOverallAmount","","","placeholder='Overall Amount' disabled"); ?> 
+					</div>
+				</div>
+			</div>
+		</div>
+		
+		<footer class="page-footer">
+		<div class="container">
+			<div class="row" style='padding-top:10px;'>
+				<div class="col-lg-6 col-md-6 col-sm-6 col-xs-6 text-left">
+					
+				</div>
+				
+				<div class="col-lg-6 col-md-6 col-sm-6 col-xs-6 text-right">
+					<?
+						GVimageButton("SAVE","GVSaveBtn","GVSaveBtn",GVimage("image","image","/gvtech/images/save.png","","","width='20'"),"submit","SECONDARY","","");  
+					?>
+				</div>
+			</div>
+		</div>
+		</footer>
+		</div>
+	
+	<? 
+		GVHiddenInput("totItem", "totItem", "");
+		$GVBackBtnInd = 0;
+		$GVsaveBtnInd = 0;
+		include("page_footer.html"); 
+		
+		$VendorAddURL = GVstringEncrption("LoadHtmlPage=gv_vendor_info&GVmenu=$GVmenu&GVsubMenu=FRMPURCHASE&GVSTEP=ADD");
+	?>
+
+<script type='text/javascript'>
+	var _ProductRateArr = <? echo json_encode($ProductRateArr);?>;
+	var _ProductCodeArr = <? echo json_encode($ProductCodeArr);?>;
+	
+	var windowHeight = window.innerHeight * 0.55;
+	if(document.getElementById("mainTableID"))
+	{
+		document.getElementById("mainTableID").style.maxHeight = windowHeight;
+		document.getElementById("mainTableID").style.minHeight = windowHeight;
+	}
+	
+	$('#txtPurchaseDate').daterangepicker({ "singleDatePicker": true, locale: { format: 'DD-MM-YYYY' }});
+	
+	function AddNewItems(_recordURL) 
+	{
+		var _lastRowId = $('#itemTable tr:last').attr('id');
+		
+		if(_lastRowId != "")
+			_lastRowId = _lastRowId.replace("itemRec", "");
+		else
+			_lastRowId = 0;
+		
+		$.ajax({
+			url: _recordURL,
+			type: "POST",
+			cache:false,
+			data:{recStart: _lastRowId},
+			success: function (response) 
+			{
+				$("#itemDIV").append(response);
+			}
+		});
+	}
+	
+	function rdoDiscountInd_onclick()
+	{
+		if($("#rdoDiscountInd1").is(":checked"))
+		{
+			$("#DiscountPecentageID").show();
+			$("#txtDiscountAmount").prop('disabled', true);
+		}
+		else
+		{
+			$("#DiscountPecentageID").hide();
+			$("#txtDiscountAmount").prop('disabled', false);
+		}
+			
+		salesCalculation();
+	}
+	
+	rdoDiscountInd_onclick();
+	
+	function itemDelete(_recordDel) 
+	{
+		$("#"+_recordDel).remove();
+		
+		var _rowID = _recordDel.replace("itemRec", "");
+		$("#ItemList_"+_rowID).val("");
+		
+		salesCalculation();
+		
+	}
+	
+	function cboVendor_onchanged(_value)
+	{
+		if(_value == -1)
+		{
+			setGVPopupSession('<? echo $VendorAddURL; ?>','<? echo $GV_PopupSSDATA; ?>',700,400);
+		}
+	}
+	
+	function cboProductName_onchanged(_cboID, _value)
+	{
+		var _rowID = _cboID.replace("cboProductName", "");
+		$("#txtProductCode"+_rowID).val(_ProductCodeArr[_value]);
+		$("#ItemList_"+_rowID).val(_value);
+		
+		productTotalCalculate(_rowID);
+	}
+	
+	$("table").on("blur", ".txtProductCode", function() {
+		var _rowID = $(this).closest('tr').attr('id');
+		_rowID = _rowID.replace("itemRec", "");
+		_prodCode = $("#txtProductCode"+_rowID).val().toUpperCase();
+		_prodID = _prodCode.replace("PT", "");
+		
+		if(_prodID != "")
+		{
+			$("#cboProductName"+_rowID).val(_prodID);
+			$("#ItemList_"+_rowID).val(_prodID);
+		}
+	});
+	
+	$("table").on("blur", ".txtQuantity", function() {
+	    var _rowID = $(this).closest('tr').attr('id');
+	    _rowID = _rowID.replace("itemRec", "");
+	    productTotalCalculate(_rowID);
+	});
+	
+	$("table").on("blur", ".txtRate", function() {
+	    var _rowID = $(this).closest('tr').attr('id');
+	    _rowID = _rowID.replace("itemRec", "");
+	    productTotalCalculate(_rowID);
+	});
+	
+	$("table").on("blur", ".txtGSTPercent", function() {
+	    var _rowID = $(this).closest('tr').attr('id');
+	    _rowID = _rowID.replace("itemRec", "");
+	    productTotalCalculate(_rowID);
+	});
+	
+	$("#txtPercent").on("blur", function() {
+	   salesCalculation();
+	});
+	
+	$("#txtTransportAmount").on("blur", function() {
+	   salesCalculation();
+	});
+	
+	$("#txtDiscountAmount").on("blur", function() {
+	   salesCalculation();
+	});
+	
+	function productTotalCalculate(_rowID)
+	{
+		var _prodQty = $("#txtQuantity"+_rowID).val();
+		var _prodRate = $("#txtRate"+_rowID).val();
+		var _gstPercent = $("#txtGSTPercent"+_rowID).val();
+		
+		var _gstAmt =  parseFloat((_prodQty  * _prodRate * _gstPercent) / 100);
+		
+		$("#txtGSTAmount"+_rowID).val(_gstAmt.toFixed(2));
+		
+		var _prodAmt = parseFloat((_prodQty * _prodRate) + _gstAmt);
+		
+		$("#txtAmount"+_rowID).val(_prodAmt.toFixed(2));
+		
+		salesCalculation();
+	}
+	
+	function salesCalculation()
+	{
+		var _lastRowId = $('#itemTable tr:last').attr('id');
+		
+		if(_lastRowId != "")
+			_lastRowId = _lastRowId.replace("itemRec", "");
+		else
+			_lastRowId = 0;
+			
+		var _totAmt = 0;
+		var _totQty = 0;
+		var _totGst = 0;
+		
+		for(var _incr = 1;_incr <= _lastRowId; _incr++)
+		{
+			if($("#txtQuantity"+_incr).length > 0)
+			{
+				_totQty += parseInt($("#txtQuantity"+_incr).val());
+				_totAmt += parseFloat($("#txtAmount"+_incr).val());
+				_totGst += parseFloat($("#txtGSTAmount"+_incr).val());
+			}
+		}
+		
+		
+		$("#txtTotalAmount").val(_totAmt.toFixed(2));
+		$("#txtTotalGSTAmount").val(_totGst.toFixed(2));
+		$("#txtTotalQty").val(_totQty);
+		
+		var _discountAmt = 0;
+		var _discountPercentage = 0;
+		var _overallAmt = 0;
+		var _transportWages = 0;
+		var _transportWithAmt = 0;
+		
+		if($("#rdoDiscountInd1").is(":checked"))
+		{
+			_discountPercentage = parseFloat($("#txtPercent").val());
+			
+			if(_discountPercentage > 0)
+				_discountAmt = parseFloat((_totAmt *_discountPercentage) / 100); 
+			else 
+				_discountAmt = 0;
+			
+			$("#txtDiscountAmount").val(_discountAmt.toFixed(2));
+		}
+		else
+		{
+			_discountAmt = parseFloat($("#txtDiscountAmount").val());
+		}
+		
+		_transportWages = parseFloat($("#txtTransportAmount").val()); 
+		_transportWithAmt = parseFloat(_totAmt + _transportWages);
+		_overallAmt = parseFloat(_transportWithAmt - _discountAmt);
+		$("#txtOverallAmount").val(_overallAmt.toFixed(2));
+	}
+	
+	$("form").submit(function() 
+	{
+		var _lastRowId = $('#itemTable tr:last').attr('id');
+		
+		if(_lastRowId != "")
+			_lastRowId = _lastRowId.replace("itemRec", "");
+		else
+			_lastRowId = 0;
+			
+		$("#totItem").val(_lastRowId);
+		 
+	});
+	
+	function productTotalRecalculate()
+	{
+		var _lastRowId = $('#itemTable tr:last').attr('id');
+		
+		if(_lastRowId != "")
+			_lastRowId = _lastRowId.replace("itemRec", "");
+		else
+			_lastRowId = 0;
+			
+		for(var _incr = 1;_incr <= _lastRowId; _incr++)
+		{
+			if($("#cboProductName"+_incr).length > 0)
+			{
+				productTotalCalculate(_incr);
+			}
+		}
+	}
+	
+	var _errInd = '<? echo 	$ErrorInd; ?>';
+	
+	if(_errInd == 1)
+		productTotalRecalculate();
+</script>
+	

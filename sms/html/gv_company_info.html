@@ -1,0 +1,145 @@
+	<? 
+		include("page_header.html");
+		include("../info/gv_setting_info.php"); 
+		include("gv_submenu.html");
+		
+		$txtCompanyCode = "";
+		$MySelectQry = "select * from gv_company_info where";
+		$MySelectQry .= " company_id=?";MYSQL_BuildArray("company_id",$company_id,"s");
+		$MyDbResult =  MyDbQuery($MySelectQry,$_GVParamArray);	
+		$MyNumRows = MyDbNumRows($MyDbResult);
+		if($MyRowData = mysqli_fetch_array($MyDbResult, MYSQLI_ASSOC))
+		{
+			$txtCompanyCode = GVStringFormat($MyRowData['company_code']);
+		}
+		
+		if($ErrorInd == 0)
+		{
+			$txtCompanyName = "";
+			$txtCompanyAddr1 = "";
+			$txtCompanyAddr2 = "";
+			$txtCompanyCity = "";
+			$txtCompanyState = "";
+			$txtCompanyZip = "";
+			$txtCompanyPhone = "";
+			$txtCompanyEmail = "";
+
+			if($MyNumRows > 0)
+			{
+				$txtCompanyCode = GVStringFormat($MyRowData['company_code']);
+				$txtCompanyName = GVStringFormat($MyRowData['company_name']);
+				$txtCompanyAddr1 = GVStringFormat($MyRowData['company_addr1']);
+				$txtCompanyAddr2 = GVStringFormat($MyRowData['company_addr2']);
+				$txtCompanyCity = GVStringFormat($MyRowData['company_city']);
+				$txtCompanyState = GVStringFormat($MyRowData['company_state']);
+				$txtCompanyZip = GVStringFormat($MyRowData['company_zip']);
+				$txtCompanyPhone = GVStringFormat($MyRowData['company_phone']);
+				$txtCompanyEmail = GVStringFormat($MyRowData['company_email']);
+			}
+			MyDbFreeResult($MyDbResult);
+		}
+	
+	?>
+	
+	<div class="container-fluid" style='padding-bottom:50px;'>
+		<div class="row" style='padding:12px 7px 0px 0px;'>
+			<div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
+				<label class="MyTextHeading"><i class='fa fa-university'></i><span>Company Infomation</span></label>
+			</div>
+		</div>
+		
+		<div class="row" style='padding-top: 5px;'>
+			<div class="col-lg-4 col-md-12 col-sm-12 col-xs-12 text-right">
+				<label class="MyLabelText">Company Code</label>
+			</div>
+			
+			<div class="col-lg-4 col-md-12 col-sm-12 col-xs-12">
+				<? GVTextBox("INPUT","txtCompanyCode","txtCompanyCode","","","disabled"); ?> 
+			</div>
+		</div>
+		
+		<div class="row" style='padding-top: 5px;'>
+			<div class="col-lg-4 col-md-12 col-sm-12 col-xs-12 text-right">
+				<label class="MyLabelText">Company Name</label>
+			</div>
+			
+			<div class="col-lg-4 col-md-12 col-sm-12 col-xs-12">
+				<? GVTextBox("INPUT","txtCompanyName","txtCompanyName","","","maxlength='35' placeholder='Company Name'"); ?> 
+			</div>
+		</div>
+		
+		<div class="row">
+			<div class="col-lg-4 col-md-12 col-sm-12 col-xs-12 text-right">
+				<label class="MyLabelText">Address Line 1</label>
+			</div>
+			
+			<div class="col-lg-4 col-md-12 col-sm-12 col-xs-12">
+				<? GVTextBox("INPUT","txtCompanyAddr1","txtCompanyAddr1","","","maxlength='35' placeholder='Address Line 1'"); ?> 
+			</div>
+		</div>
+		
+		<div class="row">
+			<div class="col-lg-4 col-md-12 col-sm-12 col-xs-12 text-right">
+				<label class="MyLabelText">Address Line 2</label>
+			</div>
+			
+			<div class="col-lg-4 col-md-12 col-sm-12 col-xs-12">
+				<? GVTextBox("INPUT","txtCompanyAddr2","txtCompanyAddr2","","","maxlength='35' placeholder='Address Line 2'"); ?> 
+			</div>
+		</div>
+		
+		<div class="row">
+			<div class="col-lg-4 col-md-12 col-sm-12 col-xs-12 text-right">
+				<label class="MyLabelText">City</label>
+			</div>
+			
+			<div class="col-lg-4 col-md-12 col-sm-12 col-xs-12">
+				<? GVTextBox("INPUT","txtCompanyCity","txtCompanyCity","","","maxlength='35' placeholder='City'"); ?> 
+			</div>
+		</div>
+		
+		<div class="row">
+			<div class="col-lg-4 col-md-12 col-sm-12 col-xs-12 text-right">
+				<label class="MyLabelText">State</label>
+			</div>
+			
+			<div class="col-lg-4 col-md-12 col-sm-12 col-xs-12">
+				<? GVTextBox("INPUT","txtCompanyState","txtCompanyState","","","maxlength='35' placeholder='State'"); ?> 
+			</div>
+		</div>
+		
+		<div class="row">
+			<div class="col-lg-4 col-md-12 col-sm-12 col-xs-12 text-right">
+				<label class="MyLabelText">Postal Code</label>
+			</div>
+			
+			<div class="col-lg-4 col-md-12 col-sm-12 col-xs-12">
+				<? GVTextBox("INPUT","txtCompanyZip","txtCompanyZip","","","maxlength='6' placeholder='Postal Code' onkeypress='return isNumberKey(this)'"); ?> 
+			</div>
+		</div>
+		
+		<div class="row">
+			<div class="col-lg-4 col-md-12 col-sm-12 col-xs-12 text-right">
+				<label class="MyLabelText">E-mail Address</label>
+			</div>
+			
+			<div class="col-lg-4 col-md-12 col-sm-12 col-xs-12">
+				<? GVTextBox("INPUT","txtCompanyEmail","txtCompanyEmail","","","maxlength='50' placeholder='E-mail Address'"); ?> 
+			</div>
+		</div>
+		
+		<div class="row">
+			<div class="col-lg-4 col-md-12 col-sm-12 col-xs-12 text-right">
+				<label class="MyLabelText">Phone Number</label>
+			</div>
+			
+			<div class="col-lg-4 col-md-12 col-sm-12 col-xs-12">
+				<? GVTextBox("INPUT","txtCompanyPhone","txtCompanyPhone","","","maxlength='10' placeholder='Phone Number' onkeypress='return isNumberKey(this)'"); ?> 
+			</div>
+		</div>
+	</div>
+	
+	<? 
+		$GVsaveBtnInd = 1;
+		include("page_footer.html"); 
+	?>

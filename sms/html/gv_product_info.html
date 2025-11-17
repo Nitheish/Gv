@@ -1,0 +1,178 @@
+	<?
+		$GVpageTitle = "PRODUCT INFORMATION";
+		include("gv_popup_header.html");
+		
+		$pdtCategoryArr = array();
+		$pdtCategoryArr[""] = "Select The Product Category";
+		$MySelectQry = "select category_name,pdt_category_id from pdt_category_info where";
+		$MySelectQry .= " company_id=?";MYSQL_BuildArray("company_id",$company_id,"s");
+		$MySelectQry .= " order by category_name";
+		$MyDbResult =  MyDbQuery($MySelectQry,$_GVParamArray);	
+		while($MyRowData = mysqli_fetch_array($MyDbResult, MYSQLI_ASSOC)) 
+		{
+			$pdtCategoryArr[GVStringFormat($MyRowData['pdt_category_id'])] = GVStringFormat($MyRowData['category_name']);
+		}
+		MyDbFreeResult($MyDbResult);
+		
+		if($ErrorInd == 0)
+		{
+			$txtProductCode = "";
+			$txtProductName = "";
+			$txtsellingAmt = "0.00";
+			$txtIntialQtyAmt = "0.00";
+			$txtIntialQty = "0";
+			$chkAlertInd = "0";
+			$txtAlertQtyLevel = "0";
+			$txtSoldQty = 0;
+			$cboPdtCategory = "";
+
+			if($GVSTEP == "EDIT")
+			{
+				$MySelectQry = "select * from product_info where";
+				$MySelectQry .= " company_id=?";MYSQL_BuildArray("company_id",$company_id,"s");
+				$MySelectQry .= " and product_id=?";MYSQL_BuildArray("product_id",$GVID,"s");
+				$MyDbResult =  MyDbQuery($MySelectQry,$_GVParamArray);	
+				if($MyRowData = mysqli_fetch_array($MyDbResult, MYSQLI_ASSOC)) 
+				{
+					$txtProductCode = GVStringFormat($MyRowData['product_code']);
+					$txtProductName = GVStringFormat($MyRowData['product_name']);
+					$txtIntialQty = GVStringFormat($MyRowData['initial_qty']);
+					$chkAlertInd = GVStringFormat($MyRowData['alert_ind']);
+					$txtAlertQtyLevel = GVStringFormat($MyRowData['qty_count_alert']);
+					$txtSoldQty = GVStringFormat($MyRowData['sold_qty']);
+					$txtsellingAmt = GVformatAmount(GVStringFormat($MyRowData['sell_amount']));
+					$txtIntialQtyAmt = GVformatAmount(GVStringFormat($MyRowData['initial_qty_amt']));
+					$cboPdtCategory = GVStringFormat($MyRowData['pdt_category_id']);
+				}
+				MyDbFreeResult($MyDbResult);
+			}
+		}
+		
+		$inputDisabled = "";
+		if($GVSTEP == "EDIT" && $txtSoldQty != 0)
+			$inputDisabled = "disabled";
+	?>
+	
+	<div class="container-fluid" style='margin-top:10px;margin-bottom:10px;'>
+		<div class="row">
+			<div class="col-lg-4 col-md-4 col-sm-4 col-xs-4 text-right">
+				<label class="MyLabelText">Product Name</label>
+			</div>
+			
+			<div class="col-lg-6 col-md-6 col-sm-6 col-xs-6">
+				<? GVTextBox("INPUT","txtProductName","txtProductName","","","maxlength='35' placeholder='Product Name'"); ?> 
+			</div>
+		</div>
+		
+		<? if($GVSTEP == "EDIT") { ?>
+		<div class="row" style='padding-top: 5px;'>
+			<div class="col-lg-4 col-md-4 col-sm-4 col-xs-4 text-right">
+				<label class="MyLabelText">Product Code</label>
+			</div>
+			
+			<div class="col-lg-6 col-md-6 col-sm-6 col-xs-6">
+				<? 
+					GVTextBox("INPUT","txtProductCode","txtProductCode","","","disabled placeholder='Product Code'"); 
+					GVHiddenInput("txtProductCode","txtProductCode","");
+				?> 
+			</div>
+		</div>
+		<? } ?>
+		
+		<div class="row">
+			<div class="col-lg-4 col-md-4 col-sm-4 col-xs-4 text-right">
+				<label class="MyLabelText">Initial Quantity</label>
+			</div>
+			
+			<div class="col-lg-6 col-md-6 col-sm-6 col-xs-6">
+				<? 
+					GVTextBox("INPUT","txtIntialQty","txtIntialQty","","text-align:right;","maxlength='6' placeholder='Initial Quantity' onkeypress='return isNumberKey(this)' $inputDisabled"); 
+				?> 
+			</div>
+		</div>
+		
+		<div class="row">
+			<div class="col-lg-4 col-md-4 col-sm-4 col-xs-4 text-right">
+				<label class="MyLabelText">Initial Quantity Unit Price</label>
+			</div>
+			
+			<div class="col-lg-6 col-md-6 col-sm-6 col-xs-6">
+				<? 
+					GVAmountBox("INPUT","txtIntialQtyAmt","txtIntialQtyAmt","","","placeholder='Initial Quantity Unit Price' $inputDisabled"); 
+				?> 
+			</div>
+		</div>
+		
+		<div class="row">
+			<div class="col-lg-4 col-md-4 col-sm-4 col-xs-4 text-right">
+				<label class="MyLabelText">Selling Price</label>
+			</div>
+			
+			<div class="col-lg-6 col-md-6 col-sm-6 col-xs-6">
+				<? GVAmountBox("INPUT","txtsellingAmt","txtsellingAmt","","","placeholder='Selling Price'"); ?> 
+			</div>
+		</div>
+		
+		<div class="row">
+			<div class="col-lg-4 col-md-4 col-sm-4 col-xs-4 text-right">
+				
+			</div>
+			
+			<div class="col-lg-6 col-md-6 col-sm-6 col-xs-6">
+				<label class="MyLabelText" style='display:inline-flex;'>
+				<? GVCheckBox("INPUT","chkAlertInd","chkAlertInd","1","","","onclick='chkAlertInd_checked();'"); ?>
+				<div style='margin-left:5px;'>Check Here, If you want alert low level qunantity</div>
+				</label>
+			</div>
+		</div>
+		
+		<div id='LOWQTY_ID' class="row">
+			<div class="col-lg-4 col-md-4 col-sm-4 col-xs-4 text-right">
+				<label class="MyLabelText">Alert Qunantity Level</label>
+			</div>
+			
+			<div class="col-lg-6 col-md-6 col-sm-6 col-xs-6">
+				<? 
+					GVTextBox("INPUT","txtAlertQtyLevel","txtAlertQtyLevel","","text-align:right;","maxlength='3' placeholder='Alert Qunantity Level' onkeypress='return isNumberKey(this)'"); 
+				?> 
+			</div>
+		</div>
+		
+		<div class="row">
+			<div class="col-lg-4 col-md-4 col-sm-4 col-xs-4 text-right">
+				<label class="MyLabelText">Product Category</label>
+			</div>
+			
+			<div class="col-lg-6 col-md-6 col-sm-6 col-xs-6">
+				<? GVComboBox("INPUT","cboPdtCategory","cboPdtCategory",$pdtCategoryArr,"","width:150px;",""); ?>
+			</div>
+		</div>
+	</div>
+	
+	<? 
+		GVHiddenInput("txtSoldQty","txtSoldQty","");
+		
+		if($txtSoldQty != 0)
+		{
+			GVHiddenInput("txtIntialQtyAmt","txtIntialQtyAmt","");
+			GVHiddenInput("txtIntialQty","txtIntialQty","");
+		}
+		
+		$GVBackBtnInd = 1;
+		$GVBackBtnVal = "CANCEL";
+		$GVsaveBtnInd = 1;
+		$GVSaveBtnVal = "SAVE";
+		include("gv_popup_footer.html"); 
+	?>
+	
+	<script type='text/javascript'>
+	function chkAlertInd_checked()
+	{
+		if($("#chkAlertInd").is(':checked'))
+			$("#LOWQTY_ID").show();
+		else
+			$("#LOWQTY_ID").hide();
+	}
+	
+	chkAlertInd_checked();
+	</script>

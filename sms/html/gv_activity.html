@@ -1,0 +1,172 @@
+	<?
+		$GVpageTitle = "Activity History";
+		include("gv_popup_header.html");
+		
+		$pagePerRecordArr = array();
+		$pagePerRecordArr[10] = 10;
+		$pagePerRecordArr[25] = 25;
+		$pagePerRecordArr[50] = 50;
+		
+		$txtRangeDateStart = "";
+		$txtRangeDateEnd = "";
+		
+		if($txtRangeDate != "")
+		{
+			$txtRangeDateStart = GVGetDateDBformat(substr($txtRangeDate,0,10));
+			$txtRangeDateEnd = GVGetDateDBformat(substr($txtRangeDate,13,10));
+		}
+		
+		$MySelectQry = "select gah.*,count(gv_action_history_id) over() as totCnt";
+		$MySelectQry .= " from gv_action_history gah where";
+		$MySelectQry .= " company_id=?";MYSQL_BuildArray("company_id",$company_id,"s");
+		
+		if(strlen($txtSearchStr) > 0)
+		{
+			$MySelectQry .= " and action like CONCAT('%', ?, '%')";MYSQL_BuildArray("action",$txtSearchStr,"s");
+		}
+		
+		if($txtRangeDate != "")
+		{
+			if($txtRangeDateStart == $txtRangeDateEnd)
+			{
+				$MySelectQry .= " and cast(create_datetime as date)=?";MYSQL_BuildArray("create_datetime",$txtRangeDateStart,"s");
+			}
+			else
+			{
+				$MySelectQry .= " and cast(create_datetime as date) between ? ";MYSQL_BuildArray("create_datetime",$txtRangeDateStart,"s");
+				$MySelectQry .= " and ?";MYSQL_BuildArray("create_datetime",$txtRangeDateEnd,"s");
+			}
+		}
+			
+		$MySelectQry .= " order by create_datetime desc LIMIT $numRecordPerPage offset $startRecord";
+		$MyDbResult =  MyDbQuery($MySelectQry,$_GVParamArray);
+		$MyNumRows = MyDbNumRows($MyDbResult);
+		$MyRowData = mysqli_fetch_array($MyDbResult, MYSQLI_ASSOC);
+		$totNumRecord = GVStringFormat($MyRowData['totCnt']);
+	?>
+	
+	<style>
+	.form-group {
+	    margin-bottom: 0px;
+	}
+	</style>
+	
+	<div class="container-fluid" style='margin-top:5px;'>
+		<div class='GVSearchBar'>
+			<?
+			echo "<label class='MyLabelText text-left' style='margin:3px;'>Search</label>";
+			GVTextBox("INPUT","txtSearchStr","txtSearchStr","","width:200px;margin-left: 5px;","maxlength='100' placeholder='Activity'"); 
+			GVDateRangeBox("INPUT", "txtRangeDate", "txtRangeDate", "", "margin-left:5px;width:180px;border-radius: 5px;", "readonly placeholder='Date Range'");
+					
+			GVimageButton("SEARCH","GVSaveBtn","GVSearchBtn",GVimage("image","image","/gvtech/images/search.png","","","width='15'"),"submit","SECONDARY","margin-left:5px;height:27px;font-size:11px;","");  
+			GVimageButton("RESET","GVSaveBtn","GVResetBtn",GVimage("image","image","/gvtech/images/Refresh.png","","","width='15'"),"button","SECONDARY","margin-left:5px;height:27px;font-size:11px;","onclick='reset_btnClick();'");  
+			
+			echo "<label class='MyLabelText text-left' style='margin:3px;margin-left: 5px;'>Records Per Page </label>";
+			GVComboBox("INPUT","numRecordPerPage","numRecordPerPage",$pagePerRecordArr,"","margin-left: 5px;width:50px;","onchange='GVPagePerRecord_onchange();'"); 
+			?>
+		</div>
+		
+		<? if($totNumRecord > 0) { ?>
+		
+		<div id='mainTableID' class="table-responsive GVtableHeadDIV" style='overflow-y:auto;width:100%;'>          
+			<table class="table table-hover GVtableHeadFixed" style='width:100%;margin-top:0px !important;'>
+				<thead>
+					<tr>
+						<th width='3%' class='GVtableHead text-center'>S.No</th>
+						<th width='18%' class='GVtableHead text-left'>Date & Time</th>
+						<th width='80%' class='GVtableHead text-left'>Action</th>
+					</tr>
+				</thead>
+				
+				<tbody>
+					<?
+					$recCount = $startRecord;
+					do
+					{
+						$create_datetime = GVGetUserDateTimeformat(GVStringFormat($MyRowData['create_datetime']));
+						$action = GVStringFormat($MyRowData['action']);
+						
+						$recCount++;
+						?>
+						
+						<tr>
+							<td class='GVtableData text-center'><? echo $recCount; ?></td>
+							<td class='GVtableData text-left'><? echo $create_datetime; ?></td>
+							<td class='GVtableData text-left'><? echo $action; ?></td>
+						</tr>
+						
+					<?
+					}
+					while($MyRowData = mysqli_fetch_array($MyDbResult, MYSQLI_ASSOC));
+					?>
+					
+				</tbody>
+			</table>
+		</div>
+		<? } else { ?>
+			<div class="row" style='padding-top:75px;'>
+				<div class="col-lg-12 col-md-12 col-sm-12 col-xs-12 text-center">
+					<? if(strlen($txtSearchStr) > 0 || $txtRangeDate != "") { ?>
+					<label class="MyTextWarning"><? echo GVimage("image","image","/gvtech/images/search.png","","","width='75'");  ?><br>No data found Please change the filter</label><br>
+					<? GVInputButton("Reset","GVSaveBtn","GVSaveBtn","submit","SECONDARY","","onclick='reset_btnClick();'");?>
+					<? } else if($totNumRecord == 0) { ?>
+					<label class="MyTextWarning"><i class='fa fa-shopping-cart'></i><br>You don't have any Activity Information</label>
+					<? } ?>
+				</div>
+			</div>
+		<? } ?>
+		
+		<? include("gv_pagination.html"); ?>
+	</div>
+	
+	<? 
+		$GVBackBtnInd = 1;
+		$GVBackBtnVal = "CANCEL";
+		$GVsaveBtnInd = 0;
+		$GVSaveBtnVal = "SAVE";
+		include("gv_popup_footer.html"); 
+	?>
+	
+	<script type='text/javascript'>
+		var windowHeight = window.innerHeight * 0.68;
+		
+		if(document.getElementById("mainTableID"))
+		{
+			document.getElementById("mainTableID").style.maxHeight = windowHeight;
+			document.getElementById("mainTableID").style.minHeight = windowHeight;
+		}
+		
+		function reset_btnClick()
+		{
+			$('#txtRangeDate').val("");
+			$('#txtRangeDate').attr("placeholder", "Date Range");
+			
+			$("#txtSearchStr").val("");
+			$('#txtSearchStr').attr("placeholder", "Activity");
+			GVcallLoader();
+			GVformPost();
+		}
+		
+		$(function() {
+		    var start = moment().subtract(29, 'days');
+		    var end = moment();
+		
+		    function cb(start, end) {
+		        $('#txtRangeDate').val(start.format('DD-MM-YYYY') + ' - ' + end.format('DD-MM-YYYY'));
+		    }
+		
+		    $('#DR_txtRangeDate').daterangepicker({
+		    	locale: { format: 'DD-MM-YYYY' },
+		        startDate: start,
+		        endDate: end,
+		        ranges: {
+		           'Today': [moment(), moment()],
+		           'Yesterday': [moment().subtract(1, 'days'), moment().subtract(1, 'days')],
+		           'Last 7 Days': [moment().subtract(6, 'days'), moment()],
+		           'Last 30 Days': [moment().subtract(29, 'days'), moment()],
+		           'This Month': [moment().startOf('month'), moment().endOf('month')],
+		           'Last Month': [moment().subtract(1, 'month').startOf('month'), moment().subtract(1, 'month').endOf('month')]
+		        }
+		    }, cb);
+		});
+	</script>

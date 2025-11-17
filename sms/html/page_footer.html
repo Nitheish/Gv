@@ -1,0 +1,133 @@
+			 <? if($GVBackBtnInd == 1 || $GVsaveBtnInd == 1) { ?>
+			 <footer class="page-footer">
+			      <div class="container">
+			       	 <div class="row" style='padding-top:10px;'>
+					<div class="col-lg-6 col-md-6 col-sm-6 col-xs-6 text-left">
+						
+					</div>
+					
+					<div class="col-lg-6 col-md-6 col-sm-6 col-xs-6 text-right">
+						<?
+						if($GVBackBtnInd == 1 && strlen($GVBackBtnLink) > 0)
+						{
+							GVInputButton("BACK","GVBackBtn","GVBackBtn","button","SECONDARY","","onclick=GViframeDirect('$GVBackBtnLink');");
+							echo "&nbsp;&nbsp;";
+						}
+						
+						if($GVsaveBtnInd == 1)
+						{
+							GVInputButton("SAVE","GVSaveBtn","GVSaveBtn","submit","THEME","","");
+						}
+						?>
+					</div>
+				</div>
+			      </div>
+			  </footer>
+    			  <? } ?>
+			
+			<? include("gv_page_footer_content.html"); ?>
+		<form>
+	</div>
+
+<script type='text/javascript'>
+	GVStopLoader();
+	
+	$( "form" ).submit(function() 
+	{
+	  	GVcallLoader();
+	});
+	
+	
+	 // close sidebar 
+	    $("#close-sidebar").click(function () 
+	    {
+	        $(".page-wrapper").removeClass("toggled");
+	    });
+	
+	    //show sidebar
+	    $("#show-sidebar").click(function () 
+	    {
+	    	if($(".page-wrapper").hasClass("toggled"))
+	    		$(".page-wrapper").removeClass("toggled");
+	    	else
+	        	$(".page-wrapper").addClass("toggled");
+	    });
+	    
+	    //Initial
+		$(document).ready(function() {
+		//$(".page-wrapper").removeClass("toggled");
+		});
+		
+		
+		
+	
+	$(document).ready(function() {
+    //setInterval(timestamp, 1000);
+});
+
+function timestamp() {
+    $.ajax({
+        url: 'http:../backend/gv_timestamp.php',
+        success: function(data) {
+            $('#timestamp').html(data);
+        },
+    });
+}
+
+function GVDeleteRecord(DelURL) 
+{
+	event.preventDefault(); 
+	var form = event.target.form;
+	swal({
+		title: "DELETE CONFIRMATION",
+		titleClass:"MySweetHeading",
+		text: "Are you want to DELETE this Recoord?",
+		textClass: "MySweetText",
+		showCancelButton: true,
+		confirmButtonText: "YES",
+		confirmButtonClass: "MyButton btn btn-success",
+		cancelButtonText: "NO",
+		cancelButtonClass: "MyButton btn btn-danger",
+		closeOnConfirm: false,
+		closeOnCancel: true
+	},
+	function(isConfirm)
+	{
+		if (isConfirm) 
+		{
+			$.ajax({
+				url: DelURL,
+				type: "POST",
+				dataType: "html",
+				success: function () 
+				{
+					GVcallLoader();
+					var URLsrc = parent.document.getElementById("GVmainFrame").src;
+					parent.document.getElementById("GVmainFrame").src = URLsrc;
+				}
+			});
+		} 
+	});
+}
+
+function GVSweetAlertMsg(strHeading, strMessage) 
+{
+	swal({
+		title: strHeading,
+		titleClass:"MySweetHeading",
+		text: strMessage,
+		textClass: "MySweetText",
+		confirmButtonText: "OK",
+		confirmButtonClass: "MyButton btn btn-success",
+		closeOnConfirm: false,
+		closeOnCancel: true
+	});
+}
+
+function GVPagePerRecord_onchange()
+{
+	document.getElementById("currentPage").value = 1;
+	GVcallLoader();
+	GVformPost();
+}
+</script>

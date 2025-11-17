@@ -1,0 +1,293 @@
+	<style>
+	.form-group {
+	    margin-bottom: 0px;
+	}
+	</style>
+	<?
+		include("page_header.html");
+		include("../info/gv_report_info.php"); 
+		include("gv_submenu.html");
+		
+		if($txtSortName == "")
+			$txtSortName = "year,month";
+		
+		if($txtSortMethod == "" || !in_array($txtSortMethod,$GV_sortingArr))
+			$txtSortMethod = "desc";
+		
+		if($GVorderBy == "")
+			$GVorderBy = $txtSortName." ".$txtSortMethod;
+		
+		$page_name = "gv_monthly_report";
+		
+		if($GVSaveBtn == "SEARCH" || $GVSaveBtn == "RESET")
+		{
+			$currentPage = 1;
+			$startRecord = 0;
+			$hiddenPostMethod = "";
+		}
+		
+		$pagePerRecordArr = array();
+		$pagePerRecordArr[10] = 10;
+		$pagePerRecordArr[25] = 25;
+		$pagePerRecordArr[50] = 50;
+		
+		$firstSalesDate = date("Y-m-d");
+		$MySelectQry = "select sales_date from sales_info where";
+		$MySelectQry .= " company_id=?";MYSQL_BuildArray("company_id",$company_id,"s");
+		$MySelectQry .= " and delete_ind=?";MYSQL_BuildArray("delete_ind",'0',"s");
+		$MySelectQry .= " order by sales_date asc";
+		$MyDbResult =  MyDbQuery($MySelectQry,$_GVParamArray);	
+		if($MyRowData = mysqli_fetch_array($MyDbResult, MYSQLI_ASSOC)) 
+		{
+			$sales_date = GVStringFormat($MyRowData['sales_date']);
+		}
+		MyDbFreeResult($MyDbResult);
+		
+		$year = (int) substr($sales_date,0,4);
+		$currYr = date('Y');
+		
+		$yearArr = array();
+		for($incr = $year; $incr <= $currYr; $incr++)
+		{
+			$yearArr[$incr] = $incr;
+		}
+		
+		$monArr = array();
+		
+		for($incr = 1; $incr <= 12; $incr++)
+		{
+			$month = sprintf("%02d", $incr);
+			$dateOfMonth = $year."-".$month."-01";
+			$monArr[$incr] = date('F',strtotime($dateOfMonth));
+		}
+		
+		if($frmLinkInd == 1 || $GVSaveBtn == "RESET")
+		{
+			$cboFromYr = $currYr;
+			$cboFromMon = "1";
+			$cboToYr = $currYr;
+			$cboToMon = "12";
+			$FILTER_FORCE_IND = 1;
+		}
+		
+		$FILTER_OPTION = "SAVE";
+		$FILTER_ARR = array();
+		
+		if($ErrorInd != 1 || $GVSaveBtn == "RESET")
+		{
+			$FILTER_ARR["cboFromYr"] = $cboFromYr;
+			$FILTER_ARR["cboFromMon"] = $cboFromMon;
+			$FILTER_ARR["cboToYr"] = $cboToYr;
+			$FILTER_ARR["cboToMon"] = $cboToMon;
+		}
+		
+		include("../backend/gv_filter_info.php"); 
+		$GVPaginationInd = 1;
+		
+		$MySelectQry = "select temp.*,count(month) over() as totCnt from ";
+		$MySelectQry .= "(select sum(tot_qty) as tot_qty,sum(overall_amount) as overall_amount,sum(paid_amt) as paid_amt,";
+		$MySelectQry .= " sum(balance_due) as balance_due,sum(sales_profit) as sales_profit,month(sales_date) as month,year(sales_date) as year";
+		$MySelectQry .= " from sales_info si where ";
+		$MySelectQry .= " company_id=?";MYSQL_BuildArray("company_id",$company_id,"s");
+		$MySelectQry .= " and delete_ind=?";MYSQL_BuildArray("delete_ind","0","s");
+		
+		$MySelectQry .= " and year(sales_date)>=$cboFromYr";
+		$MySelectQry .= " and year(sales_date)<=$cboToYr";
+		$MySelectQry .= " and month(sales_date)>=$cboFromMon";
+		$MySelectQry .= " and month(sales_date)<=$cboToMon";
+		
+		$MySelectQry .= " GROUP by month(sales_date),year(sales_date)) as temp ";
+		$MySelectQry .= " order by $GVorderBy LIMIT $numRecordPerPage offset $startRecord";
+		$MyDbResult =  MyDbQuery($MySelectQry,$_GVParamArray);
+		$MyNumRows = MyDbNumRows($MyDbResult);
+		$MyRowData = mysqli_fetch_array($MyDbResult, MYSQLI_ASSOC);
+		$totNumRecord = GVStringFormat($MyRowData['totCnt']);
+	?>
+	<div class="container-fluid">
+		<div class="row" style='padding: 12px 7px 0px 0px;'>
+			<div class="col-lg-6 col-md-6 col-sm-6 col-xs-6">
+				<label class="MyTextHeading"><i class='fa fa-calendar'></i><span>Monthly Report</span></label>
+			</div>
+			
+			<div class="col-lg-6 col-md-6 col-sm-6 col-xs-6 text-right">
+				<?
+					$salesFrmDate = "01-".sprintf("%02d", $cboFromMon)."-".$cboFromYr;
+					$lastMonDate = date("Y-m-t", strtotime($cboToYr."-".sprintf("%02d", $cboToMon)."-01"));
+					$salesToDate = sprintf("%02d", substr($lastMonDate,8,2))."-".sprintf("%02d", $cboToMon)."-".$cboToYr;
+					echo "<label class='MyLabelText text-left' style='display: inline-block;'>From</label>";
+					echo "<label class='MyLabelText text-left' style='display: inline-block;color:blue;'>$salesFrmDate</label>";
+					echo "<label class='MyLabelText text-left' style='display: inline-block;'>to</label>";
+					echo "<label class='MyLabelText text-left' style='display: inline-block;color:blue;'>$salesToDate</label>";
+				?>
+			</div>
+		</div>
+		
+		<div class='GVSearchBar'>
+			<?
+			echo "<label class='MyLabelText text-left' style='margin:3px;'>From</label>";
+			GVComboBox("INPUT","cboFromYr","cboFromYr",$yearArr,"","width:80px;margin-left: 5px;","onchange='cboSearchOpt_onchanged(this.value);'");
+			GVComboBox("INPUT","cboFromMon","cboFromMon",$monArr,"","width:150px;margin-left: 5px;","onchange='cboSearchOpt_onchanged(this.value);'");
+			echo "<label class='MyLabelText text-left' style='margin:3px;'>To</label>";
+			GVComboBox("INPUT","cboToYr","cboToYr",$yearArr,"","width:80px;margin-left: 5px;","onchange='cboSearchOpt_onchanged(this.value);'");
+			GVComboBox("INPUT","cboToMon","cboToMon",$monArr,"","width:150px;margin-left: 5px;","onchange='cboSearchOpt_onchanged(this.value);'");
+			GVimageButton("SEARCH","GVSaveBtn","GVSearchBtn",GVimage("image","image","/gvtech/images/search.png","","","width='15'"),"submit","SECONDARY","margin-left:5px;height:27px;font-size:11px;","");  
+			GVimageButton("RESET","GVSaveBtn","GVResetBtn",GVimage("image","image","/gvtech/images/Refresh.png","","","width='15'"),"submit","SECONDARY","margin-left:5px;height:27px;font-size:11px;","");  
+			
+			echo "<label class='MyLabelText text-left' style='margin:3px;margin-left: 5px;'>Show</label>";
+			GVComboBox("INPUT","numRecordPerPage","numRecordPerPage",$pagePerRecordArr,"","margin-left: 5px;width:50px;","onchange='GVPagePerRecord_onchange();'"); 
+			echo "<label class='MyLabelText text-left' style='margin:3px;margin-left: 2px;'>Records</label>";
+			
+			//$pdfLink = "../backend/gv_page_redirect.php?SkipSSDataInd=1".GVqueryString("LoadHtmlPage=gv_customer_report_export&GVmenu=$GVmenu&cboSearchOpt=$cboSearchOpt&txtSearchStr=$txtSearchStr&GVorderBy=$GVorderBy&cboStatus=$cboStatus&txtRangeDate=$txtRangeDate");
+			//GVanchor("GVPdf","GVPdf","$pdfLink","",GVimage("GVPdf","GVPdf","/gvtech/images/pdf.png","","cursor:pointer;float:right;margin-left: auto;width:27px;height:27px;margin-left:10px;padding:3px;","title='Export to PDF'"),"","");
+			?>
+		</div>
+		
+		<?
+			GVErrBox("cboYearErr");
+			GVErrBox("cboMonthErr");
+		?>	
+		
+		<? if($totNumRecord > 0) { ?>
+		
+		<div id='mainTableID' class="table-responsive GVtableHeadDIV" style='overflow-y:auto;width:100%;'>          
+			<table class="table table-hover GVtableHeadFixed" style='width:100%;margin-top:0px !important;'>
+				<thead>
+					<tr>
+						<th width='5%' class='GVtableHead text-center'>S.No</th>
+						<th width='15%' class='GVtableHead text-left'>Year and Month<? GVSortMethod("year,month",$txtSortMethod); ?></th>
+						<th width='12%' class='GVtableHead text-right'>Total Qty<? GVSortMethod("tot_qty",$txtSortMethod); ?></th>
+						<th width='12%' class='GVtableHead text-right'>Overall&nbsp;(&nbsp;<i class='fa fa-rupee'></i>&nbsp;)<? GVSortMethod("overall_amount",$txtSortMethod); ?></th>
+						<th width='12%' class='GVtableHead text-right'>Paid&nbsp;(&nbsp;<i class='fa fa-rupee'></i>&nbsp;)<? GVSortMethod("paid_amt",$txtSortMethod); ?></th>
+						<th width='12%' class='GVtableHead text-right'>Balance&nbsp;(&nbsp;<i class='fa fa-rupee'></i>&nbsp;)<? GVSortMethod("balance_due",$txtSortMethod); ?></th>
+						<th width='12%' class='GVtableHead text-right'>Profit&nbsp;(&nbsp;<i class='fa fa-rupee'></i>&nbsp;)<? GVSortMethod("sales_profit",$txtSortMethod); ?></th>
+						<th width='10%' class='GVtableHead text-right'>Expense&nbsp;(&nbsp;<i class='fa fa-rupee'></i>&nbsp;)</th>
+						<th width='10%' class='GVtableHead text-center'>Action</th>
+					</tr>
+				</thead>
+				
+				<tbody>
+					<?
+					$recCount = $startRecord;
+					do
+					{
+						$month = GVStringFormat($MyRowData['month']);
+						$year = GVStringFormat($MyRowData['year']);
+						$tot_qty = GVStringFormat($MyRowData['tot_qty']);
+						$overall_amount = GVformatAmount(GVStringFormat($MyRowData['overall_amount']));
+						$paid_amt = GVformatAmount(GVStringFormat($MyRowData['paid_amt']));
+						$balance_due = GVformatAmount(GVStringFormat($MyRowData['balance_due']));
+						$sales_profit = GVformatAmount(GVStringFormat($MyRowData['sales_profit']));
+						$month = sprintf("%02d", $month);
+						
+						$dateOfMonth = $year."-".$month."-01";
+						$recCount++;
+						
+						$salesFrmDate = "01-".$month."-".$year;
+						$lastMonDate = date("Y-m-t", strtotime($year."-".$month."-01"));
+						$salesToDate = sprintf("%02d",substr($lastMonDate,8,2))."-".$month."-".$year;
+						$txtRangeDate = $salesFrmDate." - ".$salesToDate;
+						
+						$expenseAmt = 0;
+						$txtRangeDateStart = $year."-".$month."-01";
+						$txtRangeDateEnd = $year."-".$month."-".sprintf("%02d",substr($lastMonDate,8,2));
+						
+						$MySelectQry = "select sum(expense_amount) as expenseAmt from expenses_info where";
+						$MySelectQry .= " company_id=?";MYSQL_BuildArray("company_id",$company_id,"s");
+						$MySelectQry .= " and expense_date between ? ";MYSQL_BuildArray("expense_date",$txtRangeDateStart,"s");
+						$MySelectQry .= " and ?";MYSQL_BuildArray("expense_date",$txtRangeDateEnd,"s");
+						$MyDbResult1 =  MyDbQuery($MySelectQry,$_GVParamArray);	
+						if($MyRowData1 = mysqli_fetch_array($MyDbResult1, MYSQLI_ASSOC)) 
+						{
+							$expenseAmt = GVformatAmount(GVStringFormat($MyRowData1['expenseAmt']));
+						}
+						MyDbFreeResult($MyDbResult1);
+						?>
+						
+						<tr>
+							<td class='GVtableData text-center'><? echo $recCount; ?></td>
+							<td class='GVtableData text-left'><? echo date('Y F',strtotime($dateOfMonth)); ?></td>
+							<td class='GVtableData text-right'><? echo $tot_qty; ?></td>
+							<td class='GVtableData text-right'><? echo GVCurrecyFormat($overall_amount, 1); ?></td>
+							<td class='GVtableData text-right'><? echo GVCurrecyFormat($paid_amt, 1); ?></td>
+							<td class='GVtableData text-right'><? echo GVCurrecyFormat($balance_due, 1); ?></td>
+							<td class='GVtableData text-right'><? echo GVCurrecyFormat($sales_profit, 1); ?></td>
+							<td class='GVtableData text-right'><? echo GVCurrecyFormat($expenseAmt, 1); ?></td>
+							<td class='GVtableData text-center'>
+							<?
+								$editLink = GVstringEncrption("LoadHtmlPage=gv_sales_list&GVmenu=$GVmenu&fromReportLinkInd=1&txtRangeDate=$txtRangeDate&fromPage=gv_monthly_report");
+								echo GVimage("GVview","GVview","/gvtech/images/view.png","","cursor:pointer;","width='20' title='View All' onclick=GVcallLoader();setGVPageSession('$editLink','$GV_PageSSDATA',1);");
+								
+								if($balance_due > 0)
+								{
+									$editLink = GVstringEncrption("LoadHtmlPage=gv_sales_list&GVmenu=$GVmenu&fromReportLinkInd=1&txtRangeDate=$txtRangeDate&fromPage=gv_monthly_report&cboStatus=BALANCE");
+									echo GVimage("GVview","GVview","/gvtech/images/view1.png","","margin-left:9px;cursor:pointer;","width='20' title='View Balanced Sales' onclick=GVcallLoader();setGVPageSession('$editLink','$GV_PageSSDATA',1);");
+								}
+							?>
+							</td>
+						</tr>
+					<?
+					}
+					while($MyRowData = mysqli_fetch_array($MyDbResult, MYSQLI_ASSOC));
+					?>
+					
+				</tbody>
+			</table>
+		</div>
+		<? } else { ?>
+			<div class="row" style='padding-top:75px;'>
+				<div class="col-lg-12 col-md-12 col-sm-12 col-xs-12 text-center">
+					<? if(strlen($txtSearchStr) > 0 || $cboStatus != "" || $txtRangeDate != "") { ?>
+					<label class="MyTextWarning"><? echo GVimage("image","image","/gvtech/images/search.png","","","width='75'");  ?><br>No data found Please change the filter</label><br>
+					<? GVInputButton("RESET","GVSaveBtn","GVSaveBtn","submit","SECONDARY","","");?>
+					<? } else if($totNumRecord == 0) { ?>
+					<label class="MyTextWarning"><i class='fa fa-shopping-cart'></i><br><br>You don't have any Sales Information</label>
+					<? } ?>
+				</div>
+			</div>
+		<? } ?>
+		
+		<? include("gv_pagination.html"); ?>
+	</div>
+	
+	<? include("page_footer.html"); ?>
+	
+	<script type='text/javascript'>
+		var windowHeight = window.innerHeight * 0.71;
+		
+		if(document.getElementById("mainTableID"))
+		{
+			document.getElementById("mainTableID").style.maxHeight = windowHeight;
+			document.getElementById("mainTableID").style.minHeight = windowHeight;
+		}
+		 
+		function cboSearchOpt_onchanged(value)
+		{
+			var _selectedFilter = $("#cboSearchOpt option:selected").text();
+			$("#txtSearchStr").attr("placeholder", _selectedFilter);
+		}
+		
+		cboSearchOpt_onchanged('<? echo $cboSearchOpt; ?>');
+		
+		$(function() {
+		    var start = moment().subtract(29, 'days');
+		    var end = moment();
+		
+		    function cb(start, end) {
+		        $('#txtRangeDate').val(start.format('DD-MM-YYYY') + ' - ' + end.format('DD-MM-YYYY'));
+		    }
+		
+		    $('#DR_txtRangeDate').daterangepicker({
+		    	locale: { format: 'DD-MM-YYYY' },
+		        startDate: start,
+		        endDate: end,
+		        ranges: {
+		           'Today': [moment(), moment()],
+		           'Yesterday': [moment().subtract(1, 'days'), moment().subtract(1, 'days')],
+		           'Last 7 Days': [moment().subtract(6, 'days'), moment()],
+		           'Last 30 Days': [moment().subtract(29, 'days'), moment()],
+		           'This Month': [moment().startOf('month'), moment().endOf('month')],
+		           'Last Month': [moment().subtract(1, 'month').startOf('month'), moment().subtract(1, 'month').endOf('month')]
+		        }
+		    }, cb);
+		});
+		</script>

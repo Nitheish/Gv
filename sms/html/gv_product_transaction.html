@@ -1,0 +1,521 @@
+	<style>
+	.form-group {
+	    margin-bottom: 0px;
+	}
+	</style>
+	<?
+		include("page_header.html");
+		
+		$page_name = "gv_product_list";
+		
+		if($GVSaveBtn == "Search" || $GVSaveBtn == "Reset" || $hiddenPostMethod == "TYPE_CHANGE")
+		{
+			$currentPage = 1;
+			$startRecord = 0;
+			$hiddenPostMethod = "";
+		}
+		
+		$pagePerRecordArr = array();
+		$pagePerRecordArr[10] = 10;
+		$pagePerRecordArr[25] = 25;
+		$pagePerRecordArr[50] = 50;
+		
+		$MySelectQry = "select * from product_info where";
+		$MySelectQry .= " company_id=?";MYSQL_BuildArray("company_id",$company_id,"s");
+		$MySelectQry .= " and product_id=?";MYSQL_BuildArray("product_id",$GVID,"s");
+		$MyDbResult =  MyDbQuery($MySelectQry,$_GVParamArray);	
+		if($MyRowData = mysqli_fetch_array($MyDbResult, MYSQLI_ASSOC)) 
+		{
+			$product_code 		= GVStringFormat($MyRowData['product_code']);
+			$product_name 		= GVStringFormat($MyRowData['product_name']);
+			$initial_qty 		= GVStringFormat($MyRowData['initial_qty']);
+			$total_qty 		= GVStringFormat($MyRowData['total_qty']);
+			$sold_qty 		= GVStringFormat($MyRowData['sold_qty']);
+			$remaining_qty 		= GVStringFormat($MyRowData['remaining_qty']);
+			$initial_qty_amt 	= GVformatAmount(GVStringFormat($MyRowData['initial_qty_amt']));
+			$buying_amount 		= GVformatAmount(GVStringFormat($MyRowData['buying_amount']));
+			$sell_amount 		= GVformatAmount(GVStringFormat($MyRowData['sell_amount']));
+			$tot_purchase_amt 	= GVformatAmount(GVStringFormat($MyRowData['tot_purchase_amt']));
+			$tot_sales_amt 		= GVformatAmount(GVStringFormat($MyRowData['tot_sales_amt']));
+			$remaining_stock_amt 	= GVformatAmount(GVStringFormat($MyRowData['remaining_stock_amt']));
+			$alert_ind 		= GVStringFormat($MyRowData['alert_ind']);
+			$qty_count_alert 	= GVStringFormat($MyRowData['qty_count_alert']);
+		}
+		MyDbFreeResult($MyDbResult);
+		
+		$totSalesCost = 0;
+		$totProductCost = 0;
+		$MySelectQry = "select sum(total_amt) as totSalesCost,sum(tot_price) as totProductCost from stock_track where";
+		$MySelectQry .= " company_id=?";MYSQL_BuildArray("company_id",$company_id,"s");
+		$MySelectQry .= " and product_id=?";MYSQL_BuildArray("product_id",$GVID,"s");
+		$MySelectQry .= " and stock_type=?";MYSQL_BuildArray("stock_type","S","s");
+		$MySelectQry .= " and delete_ind=?";MYSQL_BuildArray("delete_ind",'0',"s");
+		$MyDbResult =  MyDbQuery($MySelectQry,$_GVParamArray);	
+		if($MyRowData = mysqli_fetch_array($MyDbResult, MYSQLI_ASSOC)) 
+		{
+			$totSalesCost += GVformatAmount(GVStringFormat($MyRowData['totSalesCost']));
+			$totProductCost += GVformatAmount(GVStringFormat($MyRowData['totProductCost']));
+		}
+		MyDbFreeResult($MyDbResult);
+		
+		$totProductProfit = GVformatAmount($totSalesCost - $totProductCost);
+	?>
+	
+	<div class="container-fluid">
+		<div class="row" style='padding: 12px 7px 0px 0px;'>
+			<div class="col-lg-10 col-md-10 col-sm-10 col-xs-10">
+				<label class="MyTextHeading"><i class='fa fa-cubes'></i><span>Product Transaction Details</span></label>
+			</div>
+			
+			<div class="col-lg-2 col-md-2 col-sm-2 col-xs-2 text-right">
+				<? $GVBackSummaryLink = GVstringEncrption("LoadHtmlPage=gv_product_list&GVmenu=$GVmenu&GVsubMenu=$GVsubMenu"); ?>
+				<span class="badge badge-secondary" style='padding:8px;cursor:pointer;' onclick="GVcallLoader();setGVPageSession('<? echo $GVBackSummaryLink;?>','<? echo $GV_PageSSDATA;?>',1);" title="Back to Product List"><i class='fa fa-mail-reply' style='font-size:14px;'></i></span>
+			</div>
+		</div>
+		
+		<div class="row" style="margin-top:7px;">
+			<div class="col-lg-4 col-md-4 col-sm-4 col-xs-4">
+				<div style='box-shadow: rgba(0, 0, 0, 0.24) 0px 3px 8px;padding:15px 2px 15px 2px;'>
+				
+				<div class="row">
+					<div class="col-lg-12 col-md-12 col-sm-12 col-xs-12 text-right">
+						<?
+							$editLink = GVstringEncrption("LoadHtmlPage=gv_product_info&GVmenu=$GVmenu&GVsubMenu=$GVsubMenu&GVSTEP=EDIT&GVID=$GVID");
+							echo GVimage("GVedit","GVedit","/gvtech/images/edit.png","","cursor:pointer;margin-right:15px;","width='18' title='Edit' onclick=setGVPopupSession('$editLink','$GV_PopupSSDATA',700,400);");
+						?>
+					</div>
+				</div>
+				
+				<div class="row">
+					<div class="col-lg-5 col-md-5 col-sm-5 col-xs-5 text-right">
+						<label class="MyLabelText">Product Name</label>
+					</div>
+					
+					<div class="col-lg-4 col-md-4 col-sm-4 col-xs-4">
+						<label class="MyLabelText" style="text-align:left;color:#000;font-weight: normal;"><? echo $product_name;?></label>
+					</div>
+				</div>
+				
+				<div class="row">
+					<div class="col-lg-5 col-md-5 col-sm-5 col-xs-5 text-right">
+						<label class="MyLabelText">Product Code</label>
+					</div>
+					
+					<div class="col-lg-4 col-md-4 col-sm-4 col-xs-4 text-right">
+						<span class="badge badge-secondary" style="font-size:12px;padding:7px;"><? echo $product_code;?></span>
+					</div>
+				</div>
+				
+				<div class="row">
+					<div class="col-lg-5 col-md-5 col-sm-5 col-xs-5 text-right">
+						<label class="MyLabelText">Intial Quantity</label>
+					</div>
+					
+					<div class="col-lg-4 col-md-4 col-sm-4 col-xs-4 text-right">
+						<label class="MyLabelText" style="color:#000;font-weight: normal;"><? echo $initial_qty;?></label>
+					</div>
+				</div>
+				
+				<div class="row">
+					<div class="col-lg-5 col-md-5 col-sm-5 col-xs-5 text-right">
+						<label class="MyLabelText">Intial Quantity unit price</label>
+					</div>
+					
+					<div class="col-lg-4 col-md-4 col-sm-4 col-xs-4 text-right">
+						<label class="MyLabelText" style="color:#000;font-weight: normal;">
+						<? echo GVCurrecyFormat($initial_qty_amt);?>
+						</label>
+					</div>
+				</div>
+				
+				<div class="row">
+					<div class="col-lg-5 col-md-5 col-sm-5 col-xs-5 text-right">
+						<label class="MyLabelText">Last Purchase Rate</label>
+					</div>
+					
+					<div class="col-lg-4 col-md-4 col-sm-4 col-xs-4 text-right">
+						<label class="MyLabelText" style="color:#000;font-weight: normal;">
+						<? echo GVCurrecyFormat($buying_amount);?>
+						</label>
+					</div>
+				</div>
+				
+				<div class="row">
+					<div class="col-lg-5 col-md-5 col-sm-5 col-xs-5 text-right">
+						<label class="MyLabelText">Sales Rate</label>
+					</div>
+					
+					<div class="col-lg-4 col-md-4 col-sm-4 col-xs-4 text-right">
+						<label class="MyLabelText" style="color:#000;font-weight: normal;">
+						<? echo GVCurrecyFormat($sell_amount);?>
+						</label>
+					</div>
+				</div>
+				
+				<div class="row">
+					<div class="col-lg-5 col-md-5 col-sm-5 col-xs-5 text-right">
+						<label class="MyLabelText">Total Quantity</label>
+					</div>
+					
+					<div class="col-lg-4 col-md-4 col-sm-4 col-xs-4 text-right">
+						<label class="MyLabelText" style="color:#000;font-weight: normal;"><? echo $total_qty;?></label>
+					</div>
+				</div>
+				
+				<div class="row">
+					<div class="col-lg-5 col-md-5 col-sm-5 col-xs-5 text-right">
+						<label class="MyLabelText">Sold Quantity</label>
+					</div>
+					
+					<div class="col-lg-4 col-md-4 col-sm-4 col-xs-4 text-right">
+						<label class="MyLabelText" style="color:#000;font-weight: normal;"><? echo $sold_qty;?></label>
+					</div>
+				</div>
+				
+				<div class="row">
+					<div class="col-lg-5 col-md-5 col-sm-5 col-xs-5 text-right">
+						<label class="MyLabelText">Remaining Quantity</label>
+					</div>
+					
+					<div class="col-lg-4 col-md-4 col-sm-4 col-xs-4 text-right">
+						<label class="MyLabelText" style="color:#000;font-weight: normal;"><? echo $remaining_qty;?></label>
+					</div>
+				</div>
+				
+				<div class="row">
+					<div class="col-lg-5 col-md-5 col-sm-5 col-xs-5 text-right">
+						<label class="MyLabelText">Total Purchase Amount</label>
+					</div>
+					
+					<div class="col-lg-4 col-md-4 col-sm-4 col-xs-4 text-right">
+						<label class="MyLabelText" style="color:#000;font-weight: normal;">
+						<? echo GVCurrecyFormat($tot_purchase_amt);?>
+						</label>
+					</div>
+				</div>
+				
+				<div class="row">
+					<div class="col-lg-5 col-md-5 col-sm-5 col-xs-5 text-right">
+						<label class="MyLabelText">Total Sales Amount</label>
+					</div>
+					
+					<div class="col-lg-4 col-md-4 col-sm-4 col-xs-4 text-right">
+						<label class="MyLabelText" style="color:#000;font-weight: normal;">
+						<? echo GVCurrecyFormat($tot_sales_amt);?>
+						</label>
+					</div>
+				</div>
+				
+				<div class="row">
+					<div class="col-lg-5 col-md-5 col-sm-5 col-xs-5 text-right">
+						<label class="MyLabelText">Remaining Stock Amount</label>
+					</div>
+					
+					<div class="col-lg-4 col-md-4 col-sm-4 col-xs-4 text-right">
+						<label class="MyLabelText" style="color:#000;font-weight: normal;">
+						<? echo GVCurrecyFormat($remaining_stock_amt);?>
+						</label>
+					</div>
+				</div>
+				
+				<? if($alert_ind == 1) { ?>
+				<div class="row">
+					<div class="col-lg-5 col-md-5 col-sm-5 col-xs-5 text-right">
+						<label class="MyLabelText">Alert Qunantity Level</label>
+					</div>
+					
+					<div class="col-lg-4 col-md-4 col-sm-4 col-xs-4 text-right">
+						<label class="MyLabelText" style="color:#000;font-weight: normal;"><? echo $qty_count_alert;?></label>
+					</div>
+				</div>
+				<? } ?>
+				
+				<div class="row">
+					<div class="col-lg-5 col-md-5 col-sm-5 col-xs-5 text-right">
+						<label class="MyLabelText">Product Profit</label>
+					</div>
+					
+					<div class="col-lg-4 col-md-4 col-sm-4 col-xs-4 text-right">
+						<label class="MyLabelText" style="color:#000;font-weight: normal;">
+						<? echo GVCurrecyFormat($totProductProfit);?>
+						</label>
+					</div>
+				</div>
+				
+				</div>
+			</div>
+			
+			<div class="col-lg-8 col-md-8 col-sm-8 col-xs-8">
+				<div class='GVSearchBar'>
+					<?
+					
+					$cboTypeArr = array();
+					$cboTypeArr[""] = "ALL";
+					$cboTypeArr["S"] = "Sales";
+					$cboTypeArr["P"] = "Purchase";
+					$cboTypeArr["I"] = "Initial";
+					
+					echo "<label class='MyLabelText text-left' style='margin:3px;'>Search</label>";
+					GVComboBox("INPUT","cboType","cboType",$cboTypeArr,"","margin-left: 5px;width:120px;","onchange='GVformSubmitCall(\"TYPE_CHANGE\");'"); 
+					GVDateRangeBox("INPUT", "txtRangeDate", "txtRangeDate", "", "margin-left: 7px;width:180px;border-radius: 5px;", "readonly placeholder='Date Range'");
+					
+					GVimageButton("SEARCH","GVSaveBtn","GVSearchBtn",GVimage("image","image","/gvtech/images/search.png","","","width='15'"),"submit","SECONDARY","margin-left:5px;height:27px;font-size:11px;","");  
+					GVimageButton("RESET","GVSaveBtn","GVResetBtn",GVimage("image","image","/gvtech/images/Refresh.png","","","width='15'"),"button","SECONDARY","margin-left:5px;height:27px;font-size:11px;","onclick='reset_btnClick();'");  
+			
+					echo "<label class='MyLabelText text-left' style='margin:3px;margin-left: 5px;'>Records Per Page </label>";
+					GVComboBox("INPUT","numRecordPerPage","numRecordPerPage",$pagePerRecordArr,"","margin-left: 5px;width:50px;","onchange='GVPagePerRecord_onchange();'"); 
+					?>
+				</div>
+		
+				<div id='mainTableID' class="table-responsive GVtableHeadDIV" style='overflow-y:auto;width:100%;'>          
+					<table class="table table-hover GVtableHeadFixed" style='width:100%;margin-top:0px !important;'>
+						<thead>
+							<tr>
+								<th class='GVtableHead text-center'>Date & Time</th>
+								<th class='GVtableHead text-center'>Sales / Purchase No</th>
+								<th class='GVtableHead text-center'>Description</th>
+								<th class='GVtableHead text-right'>Quantity</th>
+								<th class='GVtableHead text-right'>Price</th>
+								<th class='GVtableHead text-right'>Total Amount</th>
+								<? if($cboType == "") { ?>
+								<th class='GVtableHead text-right'>Overall Amount</th>
+								<? } ?>
+							</tr>
+						</thead>
+						
+						<tbody>
+							<?
+							$txtRangeDateStart = "";
+							$txtRangeDateEnd = "";
+							
+							if($txtRangeDate != "")
+							{
+								$txtRangeDateStart = GVGetDateDBformat(substr($txtRangeDate,0,10));
+								$txtRangeDateEnd = GVGetDateDBformat(substr($txtRangeDate,13,10));
+							}
+							
+							$tot_purchase_amt = 0;
+							$tot_sales_amt = 0;
+							$MySelectQry = "select sum(tot_price) as totProdCost,stock_type from stock_track where";
+							$MySelectQry .= " company_id=?";MYSQL_BuildArray("company_id",$company_id,"s");
+							$MySelectQry .= " and product_id=?";MYSQL_BuildArray("product_id",$GVID,"s");
+							$MySelectQry .= " and quantity>?";MYSQL_BuildArray("quantity",'0',"s");
+							$MySelectQry .= " and delete_ind=?";MYSQL_BuildArray("delete_ind",'0',"s");
+							
+							if($txtRangeDate != "")
+							{
+								if($txtRangeDateStart == $txtRangeDateEnd)
+								{
+									$MySelectQry .= " and cast(create_datetime as date)=?";MYSQL_BuildArray("create_datetime",$txtRangeDateStart,"s");
+								}
+								else
+								{
+									$MySelectQry .= " and cast(create_datetime as date) between ? ";MYSQL_BuildArray("create_datetime",$txtRangeDateStart,"s");
+									$MySelectQry .= " and ?";MYSQL_BuildArray("create_datetime",$txtRangeDateEnd,"s");
+								}
+							}
+							
+							$MySelectQry .= " group by stock_type";
+							$MyDbResult =  MyDbQuery($MySelectQry,$_GVParamArray);	
+							while($MyRowData = mysqli_fetch_array($MyDbResult, MYSQLI_ASSOC)) 
+							{
+								if(GVStringFormat($MyRowData['stock_type']) == "S")
+								{
+									$tot_sales_amt += GVformatAmount(GVStringFormat($MyRowData['totProdCost']));
+								}
+								else
+								{
+									$tot_purchase_amt += GVformatAmount(GVStringFormat($MyRowData['totProdCost']));
+								}
+							}
+							MyDbFreeResult($MyDbResult);
+							
+							$remainingQtyAmt = GVformatAmount($tot_purchase_amt - $tot_sales_amt);
+							
+							if($startRecord > 0)
+							{
+								$LastRemainingQtyAmt = GVformatAmount($remainingQtyAmt);
+
+								$MySelectQry = "select stock_type,tot_price from stock_track st where";
+								$MySelectQry .= " company_id=?";MYSQL_BuildArray("company_id",$company_id,"s");
+								$MySelectQry .= " and product_id=?";MYSQL_BuildArray("product_id",$GVID,"s");
+								$MySelectQry .= " and delete_ind=?";MYSQL_BuildArray("delete_ind","0","s");
+								
+								if($txtRangeDate != "")
+								{
+									if($txtRangeDateStart == $txtRangeDateEnd)
+									{
+										$MySelectQry .= " and cast(create_datetime as date)=?";MYSQL_BuildArray("create_datetime",$txtRangeDateStart,"s");
+									}
+									else
+									{
+										$MySelectQry .= " and cast(create_datetime as date) between ? ";MYSQL_BuildArray("create_datetime",$txtRangeDateStart,"s");
+										$MySelectQry .= " and ?";MYSQL_BuildArray("create_datetime",$txtRangeDateEnd,"s");
+									}
+								}
+								
+								$MySelectQry .= " order by create_datetime desc LIMIT $startRecord offset 0";
+								$MyDbResult =  MyDbQuery($MySelectQry,$_GVParamArray);
+								while($MyRowData = mysqli_fetch_array($MyDbResult, MYSQLI_ASSOC))
+								{
+									if(GVStringFormat($MyRowData['stock_type']) == "S")
+										$LastRemainingQtyAmt += GVformatAmount(GVStringFormat($MyRowData['tot_price']));
+									else
+										$LastRemainingQtyAmt -= GVformatAmount(GVStringFormat($MyRowData['tot_price']));
+								}
+								MyDbFreeResult($MyDbResult);
+								
+								$remainingQtyAmt = GVformatAmount($LastRemainingQtyAmt);
+							}
+							
+							$tot_price = 0;
+							$stock_type = "";
+							
+							$MySelectQry = "select st.*,count(stock_track_id) over() as totCnt";
+							$MySelectQry .= " from stock_track st where";
+							$MySelectQry .= " company_id=?";MYSQL_BuildArray("company_id",$company_id,"s");
+							$MySelectQry .= " and product_id=?";MYSQL_BuildArray("product_id",$GVID,"s");
+							$MySelectQry .= " and delete_ind=?";MYSQL_BuildArray("delete_ind","0","s");
+							
+							if($cboType != "")
+							{
+								$MySelectQry .= " and stock_type=?";MYSQL_BuildArray("stock_type",$cboType,"s");
+							}
+							
+							if($txtRangeDate != "")
+							{
+								if($txtRangeDateStart == $txtRangeDateEnd)
+								{
+									$MySelectQry .= " and cast(create_datetime as date)=?";MYSQL_BuildArray("create_datetime",$txtRangeDateStart,"s");
+								}
+								else
+								{
+									$MySelectQry .= " and cast(create_datetime as date) between ? ";MYSQL_BuildArray("create_datetime",$txtRangeDateStart,"s");
+									$MySelectQry .= " and ?";MYSQL_BuildArray("create_datetime",$txtRangeDateEnd,"s");
+								}
+							}
+							
+							$MySelectQry .= " order by create_datetime desc LIMIT $numRecordPerPage offset $startRecord";
+							$MyDbResult =  MyDbQuery($MySelectQry,$_GVParamArray);
+							$MyNumRows = MyDbNumRows($MyDbResult);
+							$MyRowData = mysqli_fetch_array($MyDbResult, MYSQLI_ASSOC);
+							$totNumRecord = GVStringFormat($MyRowData['totCnt']);
+							$custCount = $startRecord;
+							
+							if($totNumRecord > 0)
+							{
+								do
+								{
+									if($stock_type == "S")
+										$remainingQtyAmt += $tot_price;
+									else
+										$remainingQtyAmt -= $tot_price;
+										
+									$create_datetime = GVGetUserDateTimeformat(GVStringFormat($MyRowData['create_datetime']));
+									$stock_type = GVStringFormat($MyRowData['stock_type']);
+									$quantity = GVStringFormat($MyRowData['quantity']);
+									$sales_id = GVStringFormat($MyRowData['sales_id']);
+									$purchase_id = GVStringFormat($MyRowData['purchase_id']);
+									$prod_price = GVformatAmount(GVStringFormat($MyRowData['prod_price']));
+									$tot_price = GVformatAmount(GVStringFormat($MyRowData['tot_price']));
+									
+									$referenceType = "";
+									$stock_type_desc = "";
+									
+									if($stock_type == "S")
+									{
+										$stock_type_desc = "SALES";
+										$referenceType = "SL".$sales_id;
+									}
+									else if($stock_type == "P")
+									{
+										$stock_type_desc = "PURCHASE";
+										$referenceType = "PC".$purchase_id;
+									}
+									else if($stock_type == "I")
+									{
+										$stock_type_desc = "INITIAL";
+										$referenceType = "-";
+									}
+										
+									$custCount++;
+									?>
+									
+									<tr>
+										<td class='GVtableData text-center'><? echo $create_datetime; ?></td>
+										<td class='GVtableData text-center'><? echo $referenceType; ?></td>
+										<td class='GVtableData text-center'><? echo $stock_type_desc; ?></td>
+										<td class='GVtableData text-right'><? echo $quantity; ?></td>
+										<td class='GVtableData text-right'><? echo $prod_price; ?></td>
+										<td class='GVtableData text-right'><? echo $tot_price; ?></td>
+										<? if($cboType == "") { ?>
+										<td class='GVtableData text-right'><? echo GVformatAmount($remainingQtyAmt); ?></td>
+										<? } ?>
+									</tr>
+								<?
+								}
+								while($MyRowData = mysqli_fetch_array($MyDbResult, MYSQLI_ASSOC));
+							}
+							else
+							{
+								$colspan = 6;
+								
+								if($cboType == "")
+									$colspan = 7; 
+									
+								echo "<tr><td align='center' colspan='$colspan' style='color:red;'>No Record Found</td></tr>";
+							}
+							?>
+							
+						</tbody>
+					</table>
+				</div>
+				
+				<? include("gv_pagination.html"); ?>
+			</div>
+		</div>
+	</div>	
+	<? include("page_footer.html"); ?>
+	
+	<script type='text/javascript'>
+	
+	var windowHeight = window.innerHeight * 0.71;
+		
+	if(document.getElementById("mainTableID"))
+	{
+		document.getElementById("mainTableID").style.maxHeight = windowHeight;
+		document.getElementById("mainTableID").style.minHeight = windowHeight;
+	}
+	
+	function reset_btnClick()
+	{
+		$('#txtRangeDate').val("");
+		$('#txtRangeDate').attr("placeholder", "Date Range");
+		GVcallLoader();
+		GVformPost();
+	}
+		
+	$(function() {
+
+	    var start = moment().subtract(29, 'days');
+	    var end = moment();
+	
+	    function cb(start, end) {
+	        $('#txtRangeDate').val(start.format('DD-MM-YYYY') + ' - ' + end.format('DD-MM-YYYY'));
+	    }
+	
+	    $('#DR_txtRangeDate').daterangepicker({
+	    	locale: { format: 'DD-MM-YYYY' },
+	        startDate: start,
+	        endDate: end,
+	        ranges: {
+	           'Today': [moment(), moment()],
+	           'Yesterday': [moment().subtract(1, 'days'), moment().subtract(1, 'days')],
+	           'Last 7 Days': [moment().subtract(6, 'days'), moment()],
+	           'Last 30 Days': [moment().subtract(29, 'days'), moment()],
+	           'This Month': [moment().startOf('month'), moment().endOf('month')],
+	           'Last Month': [moment().subtract(1, 'month').startOf('month'), moment().subtract(1, 'month').endOf('month')]
+	        }
+	    }, cb);
+	});
+	</script>

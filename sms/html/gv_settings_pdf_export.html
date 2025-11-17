@@ -1,0 +1,205 @@
+<?
+	GVmasterAuth();
+	
+	$productOptArr = array();
+	$productOptArr[""] = "All Stocks";
+	$productOptArr["AVAILABLE"] = "Available Stock";
+	$productOptArr["OUTOFSTACK"] = "Out Of Stock";
+	$productOptArr["LOWSTOCK"] = "Low Stock";
+	$productOptArr["SOLDSTOCK"] = "Sold Stock";
+	
+	$listOptArr = array();
+	$listOptArr[""] = "--- Default Listing ---";
+	$listOptArr["QTYRATE"] = "Quantity With Purchase Rate";
+	$listOptArr["QTYPROFIT"] = "Quantity With Profit";
+	$listOptArr["ASSET"] = "Quantity Asset With Profit";
+	$listOptArr["ASSETAMT"] = "Asset Amount With Profit";
+	
+	$htmlContent = "<table class='table' cellpadding='4' style='width:100%;'>";
+	
+	$MySelectQry = "select pi.*,count(product_id) over() as totCnt";
+	$MySelectQry .= " from product_info pi where";
+	$MySelectQry .= " company_id=?";MYSQL_BuildArray("company_id",$company_id,"s");
+	$MySelectQry .= " and delete_ind=?";MYSQL_BuildArray("delete_ind","0","s");
+	
+	if($cboSearchOpt == "NAME" && strlen($txtSearchStr) > 0)
+	{
+		$MySelectQry .= " and product_name like CONCAT('%', ?, '%')";MYSQL_BuildArray("product_name",$txtSearchStr,"s");
+	}
+	else if($cboSearchOpt == "CODE" && strlen($txtSearchStr) > 0)
+	{
+		$MySelectQry .= " and product_code=?";MYSQL_BuildArray("product_code",strtoupper($txtSearchStr),"s");
+	}
+	
+	if($cboProductOption == "AVAILABLE")
+	{
+		$MySelectQry .= " and remaining_qty>?";MYSQL_BuildArray("remaining_qty",0,"s");
+	}
+	else if($cboProductOption == "OUTOFSTACK")
+	{
+		$MySelectQry .= " and remaining_qty=?";MYSQL_BuildArray("remaining_qty",0,"s");
+	}
+	else if($cboProductOption == "LOWSTOCK")
+	{
+		$MySelectQry .= " and alert_ind=?";MYSQL_BuildArray("alert_ind",1,"s");
+		$MySelectQry .= " and remaining_qty<=qty_count_alert";
+	}
+	else if($cboProductOption == "SOLDSTOCK")
+	{
+		$MySelectQry .= " and sold_qty>?";MYSQL_BuildArray("sold_qty",0,"s");
+	}
+	
+	$MySelectQry .= " order by $GVorderBy";
+	$MyDbResult =  MyDbQuery($MySelectQry,$_GVParamArray);
+	$MyNumRows = MyDbNumRows($MyDbResult);
+	if($MyNumRows > 0)
+	{
+		$htmlContent .= "<tr>";
+		$htmlContent .= "<th width='6%' class='GVtableHead text-center'>S.No</th>";
+		$htmlContent .= "<th width='13%' class='GVtableHead text-left'>product Code</th>";
+		$htmlContent .= "<th width='17%' class='GVtableHead text-left'>Product Name</th>";
+		
+		if($cboListOption == "ASSETAMT")
+		{
+			$htmlContent .= "<th width='12%' class='GVtableHead text-right'>Total &nbsp;(&#8377;)</th>";
+			$htmlContent .= "<th width='12%' class='GVtableHead text-right'>Sold &nbsp;(&#8377;)</th>";
+			$htmlContent .= "<th width='12%' class='GVtableHead text-right'>Remaining &nbsp;(&#8377;)</th>";
+		}
+		else
+		{
+			$htmlContent .= "<th width='12%' class='GVtableHead text-right'>Total Qty</th>";
+			$htmlContent .= "<th width='12%' class='GVtableHead text-right'>Sold Qty</th>";
+			$htmlContent .= "<th width='12%' class='GVtableHead text-right'>Remaining Qty</th>";
+		}
+		
+		if($cboListOption == "QTYRATE")
+		{
+			$htmlContent .= "<th width='14%' class='GVtableHead text-right'>Last Purchase Rate&nbsp;(&#8377;)</th>";
+		}
+		else if ($cboListOption == "QTYPROFIT" || $cboListOption == "ASSET" || $cboListOption == "ASSETAMT")
+		{
+			$htmlContent .= "<th width='14%' class='GVtableHead text-right'>Profit&nbsp;(&#8377;)</th>";
+		}
+		
+		$htmlContent .= "<th width='14%' class='GVtableHead text-right'>Selling Price&nbsp;(&#8377;)</th>";
+		$htmlContent .= "</tr>";
+					
+		while($MyRowData = mysqli_fetch_array($MyDbResult, MYSQLI_ASSOC))
+		{
+			$product_id = GVStringFormat($MyRowData['product_id']);
+			$product_code = GVStringFormat($MyRowData['product_code']);
+			$product_name = GVStringFormat($MyRowData['product_name']);
+			$total_qty = GVStringFormat($MyRowData['total_qty']);
+			$sold_qty = GVStringFormat($MyRowData['sold_qty']);
+			$alert_ind = GVStringFormat($MyRowData['alert_ind']);
+			$qty_count_alert = GVStringFormat($MyRowData['qty_count_alert']);
+			$remaining_qty = GVStringFormat($MyRowData['remaining_qty']);
+			$buying_amount = GVCurrecyFormat(GVformatAmount(GVStringFormat($MyRowData['buying_amount'])), 1);
+			$sell_amount = GVCurrecyFormat(GVformatAmount(GVStringFormat($MyRowData['sell_amount'])), 1);
+			$product_profit = GVCurrecyFormat(GVformatAmount(GVStringFormat($MyRowData['product_profit'])), 1);
+			$tot_purchase_amt = GVCurrecyFormat(GVformatAmount(GVStringFormat($MyRowData['tot_purchase_amt'])), 1);
+			$tot_sales_amt 	= GVCurrecyFormat(GVformatAmount(GVStringFormat($MyRowData['tot_sales_amt'])), 1);
+			$remaining_stock_amt = GVCurrecyFormat(GVformatAmount(GVStringFormat($MyRowData['remaining_stock_amt'])), 1);
+						
+			$recCount++;
+						
+			if($remaining_qty == 0)
+				$product_name .= "<br><font style='font-style:italic;font-size:9px;'>Out of stock</font>";
+			else if($alert_ind == 1)
+			{
+				if($remaining_qty <= $qty_count_alert)
+					$product_name .= "<br><font style='font-style:italic;font-size:9px;'>Low stock</font>";
+			}		
+			
+			if($cboListOption == "ASSET")
+			{
+				$product_profit = $sold_qty."<br><br>".$product_profit;
+				$total_qty .= "<br><br>".$tot_purchase_amt;
+				$sold_qty .= "<br><br>".$tot_sales_amt;
+				$remaining_qty .= "<br><br>".$remaining_stock_amt; 
+			}		
+			
+			$htmlContent .= "<tr>";
+			$htmlContent .= "<td class='GVtableData text-center'>$recCount</td>";
+			$htmlContent .= "<td class='GVtableData text-left'>$product_code</td>";
+			$htmlContent .= "<td class='GVtableData text-left'>$product_name</td>";
+			
+			if($cboListOption == "ASSETAMT")
+			{
+				$htmlContent .= "<td class='GVtableData text-right'>$tot_purchase_amt</td>";
+				$htmlContent .= "<td class='GVtableData text-right'>$tot_sales_amt</td>";
+				$htmlContent .= "<td class='GVtableData text-right'>$remaining_stock_amt</td>";
+			}
+			else
+			{
+				$htmlContent .= "<td class='GVtableData text-right'>$total_qty</td>";
+				$htmlContent .= "<td class='GVtableData text-right'>$sold_qty</td>";
+				$htmlContent .= "<td class='GVtableData text-right'>$remaining_qty</td>";
+			}
+			
+			if($cboListOption == "QTYRATE")
+			{
+				$htmlContent .= "<td class='GVtableData text-right'>$buying_amount</td>";
+			}
+			else if ($cboListOption == "QTYPROFIT" || $cboListOption == "ASSET" || $cboListOption == "ASSETAMT")
+			{
+				$htmlContent .= "<td class='GVtableData text-right'>$product_profit</td>";
+			}
+			
+			$htmlContent .= "<td class='GVtableData text-right'>$sell_amount</td>";
+			$htmlContent .= "</tr>";
+		}
+	}
+	else
+	{
+		$htmlContent .= "<tr>";
+		$htmlContent .= "<td class='GVtableData text-center'>No Records found</td>";
+		$htmlContent .= "</tr>";
+	}
+	MyDbFreeResult($MyDbResult);
+	
+	$htmlContent .= "</table>";
+	
+	if($cboListOption != "")
+		$pdfHeading = "Product Summary - ".$listOptArr[$cboListOption]." (".$productOptArr[$cboProductOption].")";
+	else
+		$pdfHeading = "Product Summary "." (".$productOptArr[$cboProductOption].")";
+	
+	$CompanyDetails = "";
+	$MySelectQry = "select company_name,company_city,company_zip from gv_company_info where";
+	$MySelectQry .= " company_id=?";MYSQL_BuildArray("company_id",$company_id,"s");
+	$MyDbResult =  MyDbQuery($MySelectQry,$_GVParamArray);	
+	$MyNumRows = MyDbNumRows($MyDbResult);
+	if($MyRowData = mysqli_fetch_array($MyDbResult, MYSQLI_ASSOC))
+	{
+		$CompanyDetails = GVStringFormat($MyRowData['company_name']);
+		$CompanyDetails .= ", ".GVStringFormat($MyRowData['company_city'])." - ".GVStringFormat($MyRowData['company_zip']);;
+	}
+	MyDbFreeResult($MyDbResult);
+	
+	$currentDateTime = GVGetUserDateTimeformat(GVGetDBCurrentDateTime());
+	
+	$headerContent = "<table style='width:100%;font-style:italic;font-size:11px;font-weight:bold;color: #4d4d4d;'>";
+	$headerContent .= "<tr>";
+	$headerContent .= "<td class='text-left' style='font-style:normal;'>$pdfHeading</td>";
+	$headerContent .= "<td class='text-right'>$currentDateTime</td>";
+	$headerContent .= "</tr>";
+	$headerContent .= "</table>";
+	
+	$footerContent = "<table style='width:100%;font-style:italic;font-size:11px;font-weight:normal;color: #4d4d4d;'>";
+	$footerContent .= "<tr>";
+	$footerContent .= "<td class='text-left'>$CompanyDetails</td>";
+	$footerContent .= "<td class='text-right'>Page {PAGENO} of {nbpg}</td>";
+	$footerContent .= "</tr>";
+	$footerContent .= "</table>";
+	
+	$HTMLSetupArr = array();
+	$HTMLSetupArr["Header"] = $headerContent;
+	$HTMLSetupArr["Footer"] = $footerContent;
+	$HTMLSetupArr["format"] = "A4";
+	$HTMLSetupArr["orientation"] = "L";
+	$HTMLSetupArr["File_Name"] = "ProductDatails_".date("ymdhisu");
+	GVGenerateHTMLtoPDF($htmlContent, $HTMLSetupArr);
+	
+	include("gv_footer.php");
+?>

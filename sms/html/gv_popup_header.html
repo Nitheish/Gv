@@ -1,0 +1,16 @@
+<?
+	include("gv_page_header_content.html");
+?>
+
+<div class='GVpopUpPageHeader'>
+	<div class="text-left">
+		<? echo $GVpageTitle; ?>
+	</div>
+	
+	<div class="text-right" style='text-align: right;float: right;margin-left: auto;'>
+		<? GVanchor("GVClose","GVClose","javascript:void(0);","",GVimage("Close","Close","/gvtech/images/delete.png","","","width='18' title='close'"),"margin: 2px;","onclick=setGVPageSession(\"\",\"$GV_PopupCloseSS\",2);"); ?>
+	</div>
+</div>
+
+<form action='<? echo "../backend/".$LoadHtmlPage; ?>' method="post" id='GVform' autocomplete="off">
+	<div id='popupDivMain' style='overflow-y:auto;'>

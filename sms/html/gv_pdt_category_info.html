@@ -1,0 +1,42 @@
+	<?
+		$GVpageTitle = "PRODUCT CATEGORY INFORMATION";
+		include("gv_popup_header.html");
+		
+		if($ErrorInd == 0)
+		{
+			$txtCategoryName = "";
+			
+			if($GVSTEP == "EDIT")
+			{
+				$MySelectQry = "select * from pdt_category_info where";
+				$MySelectQry .= " company_id=?";MYSQL_BuildArray("company_id",$company_id,"s");
+				$MySelectQry .= " and pdt_category_id=?";MYSQL_BuildArray("pdt_category_id",$GVID,"s");
+				$MyDbResult =  MyDbQuery($MySelectQry,$_GVParamArray);	
+				if($MyRowData = mysqli_fetch_array($MyDbResult, MYSQLI_ASSOC)) 
+				{
+					$txtCategoryName = GVStringFormat($MyRowData['category_name']);
+				}
+				MyDbFreeResult($MyDbResult);
+			}
+		}
+	?>
+	
+	<div class="container-fluid" style='margin-top:10px;margin-bottom:10px;'>
+		<div class="row">
+			<div class="col-lg-4 col-md-4 col-sm-4 col-xs-4 text-right">
+				<label class="MyLabelText">Product Category Name</label>
+			</div>
+			
+			<div class="col-lg-6 col-md-6 col-sm-6 col-xs-6">
+				<? GVTextBox("INPUT","txtCategoryName","txtCategoryName","","","maxlength='35' placeholder='Product Category Name'"); ?> 
+			</div>
+		</div>
+	</div>
+	
+	<? 
+		$GVBackBtnInd = 1;
+		$GVBackBtnVal = "CANCEL";
+		$GVsaveBtnInd = 1;
+		$GVSaveBtnVal = "SAVE";
+		include("gv_popup_footer.html"); 
+	?>

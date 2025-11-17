@@ -1,0 +1,216 @@
+<?
+	GVmasterAuth();
+	
+	$customerCodeArr = array();
+	$customerArr = array();
+	$customerArr[0] = "Non Vendor";
+	$MySelectQry = "select vendor_name,vendor_phone,vendor_id,vendor_code from vendor_info where";
+	$MySelectQry .= " company_id=?";MYSQL_BuildArray("company_id",$company_id,"s");
+	$MySelectQry .= " and delete_ind=?";MYSQL_BuildArray("delete_ind",'0',"s");
+	$MyDbResult =  MyDbQuery($MySelectQry,$_GVParamArray);	
+	while($MyRowData = mysqli_fetch_array($MyDbResult, MYSQLI_ASSOC)) 
+	{
+		$customerArr[GVStringFormat($MyRowData['vendor_id'])] = GVStringFormat($MyRowData['vendor_code'])." - ".GVStringFormat($MyRowData['vendor_name']);
+		$customerArr[GVStringFormat($MyRowData['vendor_id'])] .= "<div style='color:#5F5F5F;'><i class='fa fa-mobile-phone' style='font-size: 18px;'></i> ".GVStringFormat($MyRowData['vendor_phone'])."</div>";
+		$customerCodeArr[GVStringFormat($MyRowData['vendor_code'])] = GVStringFormat($MyRowData['vendor_id']);
+	}
+	MyDbFreeResult($MyDbResult);
+		
+	$statusArr = array();
+	$statusArr[""] = "ALL"; 
+	$statusArr["PAID"] = "Paid"; 
+	$statusArr["PARTIAL PAID"] = "Partial Paid";
+	$statusArr["NOT PAID"] = "Not Paid"; 
+	$statusArr["OVERPAID"] = "Over Paid"; 
+	
+	$txtRangeDateStart = "";
+	$txtRangeDateEnd = "";
+	
+	if($txtRangeDate != "")
+	{
+		$txtRangeDateStart = GVGetDateDBformat(substr($txtRangeDate,0,10));
+		$txtRangeDateEnd = GVGetDateDBformat(substr($txtRangeDate,13,10));
+	}
+	
+	$htmlContent = "<table class='table' cellpadding='4' style='width:100%;'>";
+	
+	$MySelectQry = "select pi.*,count(purchase_id) over as totCnt";
+	$MySelectQry .= " from purchase_info pi where";
+	$MySelectQry .= " company_id=?";MYSQL_BuildArray("company_id",$company_id,"s");
+	$MySelectQry .= " and delete_ind=?";MYSQL_BuildArray("delete_ind","0","s");
+	
+	if($cboStatus != "")
+	{
+		$MySelectQry .= " and status=?";MYSQL_BuildArray("status",$cboStatus,"s");
+	}
+	
+	if($txtRangeDate != "")
+	{
+		if($txtRangeDateStart == $txtRangeDateEnd)
+		{
+			$MySelectQry .= " and purchase_date=?";MYSQL_BuildArray("purchase_date",$txtRangeDateStart,"s");
+		}
+		else
+		{
+			$MySelectQry .= " and purchase_date between ? ";MYSQL_BuildArray("purchase_date",$txtRangeDateStart,"s");
+			$MySelectQry .= " and ?";MYSQL_BuildArray("purchase_date",$txtRangeDateEnd,"s");
+		}
+	}
+						
+	if($cboSearchOpt == "PURCHASECODE" && strlen($txtSearchStr) > 0)
+	{
+		$MySelectQry .= " and purchase_code=?";MYSQL_BuildArray("purchase_code",strtoupper($searchStr),"s");
+	}
+	else if($cboSearchOpt == "VENDORCODE" && strlen($txtSearchStr) > 0)
+	{
+		if(array_key_exists(strtoupper($txtSearchStr), $customerCodeArr))
+			$vendor_id = $customerCodeArr[strtoupper($txtSearchStr)];
+		else
+			$vendor_id = -1;
+			
+		$MySelectQry .= " and vendor_id=?";MYSQL_BuildArray("vendor_id",$vendor_id,"s");
+	}
+	
+	$MySelectQry .= " order by $GVorderBy";
+	$MyDbResult =  MyDbQuery($MySelectQry,$_GVParamArray);
+	$MyNumRows = MyDbNumRows($MyDbResult);
+	if($MyNumRows > 0)
+	{
+		$htmlContent .= "<tr>";
+		$htmlContent .= "<th width='5%' class='GVtableHead text-center'>S.No</th>";
+		$htmlContent .= "<th width='10' class='GVtableHead text-left'>Purchase Date</th>";
+		$htmlContent .= "<th width='9%' class='GVtableHead text-left'>Purchase No</th>";
+		$htmlContent .= "<th width='15%' class='GVtableHead text-left'>Vendor Name</th>";
+		$htmlContent .= "<th width='8%' class='GVtableHead text-left'>Bill Type</th>";
+		$htmlContent .= "<th width='8%' class='GVtableHead text-right'>Total Qty</th>";
+		$htmlContent .= "<th width='12%' class='GVtableHead text-right'>Overall&nbsp;(&#8377;)</th>";
+		$htmlContent .= "<th width='8%' class='GVtableHead text-right'>Paid&nbsp;(&#8377;)</th>";
+		$htmlContent .= "<th width='9%' class='GVtableHead text-right'>Balance&nbsp;(&#8377;)</th>";
+		$htmlContent .= "<th width='9%' class='GVtableHead text-center'>Status</th>";
+		$htmlContent .= "</tr>";
+		
+		$totalQty = 0;
+		$totalOverall = 0;
+		$totalPaid = 0;
+		$totalBalance = 0;
+		$totalProfit = 0;
+						
+		while($MyRowData = mysqli_fetch_array($MyDbResult, MYSQLI_ASSOC))
+		{
+			$purchase_id = GVStringFormat($MyRowData['purchase_id']);
+			$purchase_code = GVStringFormat($MyRowData['purchase_code']);
+			$purchase_date = GVGetUserDateformat(GVStringFormat($MyRowData['purchase_date']));
+			$vendor_name = $customerArr[GVStringFormat($MyRowData['vendor_id'])];
+			
+			if(GVStringFormat($MyRowData['purchase_type']) == 1)
+				$purchase_type = "Credit";
+			else
+				$purchase_type = "Cash";
+			
+			$tot_qty = GVStringFormat($MyRowData['tot_qty']);
+			$overall_amount = GVformatAmount(GVStringFormat($MyRowData['overall_amount']));
+			$paid_amt = GVformatAmount(GVStringFormat($MyRowData['paid_amt']));
+			$balance_due = GVformatAmount(GVStringFormat($MyRowData['balance_due']));
+			$status = GVStringFormat($MyRowData['status']);
+			
+			if($status == "PAID")
+				$status = "Paid";
+			else if($status == "PARTIAL PAID")
+				$status = "Partial Paid";
+			else if($status == "OVERPAID")
+				$status = "Over Paid";
+			else
+				$status = "Not Paid";
+									
+			$totalQty += $tot_qty;
+			$totalOverall += $overall_amount;
+			$totalPaid += $paid_amt;
+			$totalBalance += $balance_due;
+		
+			$recCount++;
+			
+			$htmlContent .= "<tr>";
+			$htmlContent .= "<td class='GVtableData text-center'>$recCount</td>";
+			$htmlContent .= "<td class='GVtableData text-left'>$purchase_date</td>";
+			$htmlContent .= "<td class='GVtableData text-left'>$purchase_code</td>";
+			$htmlContent .= "<td class='GVtableData text-left'>$vendor_name</td>";
+			$htmlContent .= "<td class='GVtableData text-left'>$purchase_type</td>";
+			$htmlContent .= "<td class='GVtableData text-right'>$tot_qty</td>";
+			$htmlContent .= "<td class='GVtableData text-right'>$overall_amount</td>";
+			$htmlContent .= "<td class='GVtableData text-right'>$paid_amt</td>";
+			$htmlContent .= "<td class='GVtableData text-right'>$balance_due</td>";
+			$htmlContent .= "<td class='GVtableData text-center'>$status</td>";
+			$htmlContent .= "</tr>";
+		}
+		
+		$htmlContent .= "<tr style='border-top:1px solid #f2f2f2;'>";
+		$htmlContent .= "<td class='GVtableData text-center'></td>";
+		$htmlContent .= "<td class='GVtableData text-left'></td>";
+		$htmlContent .= "<td class='GVtableData text-left'></td>";
+		$htmlContent .= "<td class='GVtableData text-left'></td>";
+		$htmlContent .= "<td class='GVtableData text-left'></td>";
+		$htmlContent .= "<td class='GVtableHead text-right'>$totalQty</td>";
+		$htmlContent .= "<td class='GVtableHead text-right'>".GVCurrecyFormat(GVformatAmount($totalOverall), 1)."</td>";
+		$htmlContent .= "<td class='GVtableHead text-right'>".GVCurrecyFormat(GVformatAmount($totalPaid), 1)."</td>";
+		$htmlContent .= "<td class='GVtableHead text-right'>".GVCurrecyFormat(GVformatAmount($totalBalance), 1)."</td>";
+		$htmlContent .= "<td class='GVtableData text-center'></td>";
+		$htmlContent .= "</tr>";
+	}
+	else
+	{
+		$htmlContent .= "<tr>";
+		$htmlContent .= "<td class='GVtableData text-center'>No Records found</td>";
+		$htmlContent .= "</tr>";
+	}
+	MyDbFreeResult($MyDbResult);
+	
+	$htmlContent .= "</table>";
+	
+	if($cboStatus != "")
+		$pdfHeading = "Purchase Summary - ".$statusArr[$cboStatus];
+	else
+		$pdfHeading = "Purchase Summary";
+		
+	if($txtRangeDate != "")
+	{
+		$pdfHeading .= " ( Date Range From ".GVGetUserDateformat($txtRangeDateStart)." to ".GVGetUserDateformat($txtRangeDateEnd)." )";
+	}
+	
+	$CompanyDetails = "";
+	$MySelectQry = "select company_name,company_city,company_zip from gv_company_info where";
+	$MySelectQry .= " company_id=?";MYSQL_BuildArray("company_id",$company_id,"s");
+	$MyDbResult =  MyDbQuery($MySelectQry,$_GVParamArray);	
+	$MyNumRows = MyDbNumRows($MyDbResult);
+	if($MyRowData = mysqli_fetch_array($MyDbResult, MYSQLI_ASSOC))
+	{
+		$CompanyDetails = GVStringFormat($MyRowData['company_name']);
+		$CompanyDetails .= ", ".GVStringFormat($MyRowData['company_city'])." - ".GVStringFormat($MyRowData['company_zip']);;
+	}
+	MyDbFreeResult($MyDbResult);
+	
+	$currentDateTime = GVGetUserDateTimeformat(GVGetDBCurrentDateTime());
+	
+	$headerContent = "<table style='width:100%;font-style:italic;font-size:11px;font-weight:bold;color: #4d4d4d;'>";
+	$headerContent .= "<tr>";
+	$headerContent .= "<td class='text-left' style='font-style:normal;'>$pdfHeading</td>";
+	$headerContent .= "<td class='text-right'>$currentDateTime</td>";
+	$headerContent .= "</tr>";
+	$headerContent .= "</table>";
+	
+	$footerContent = "<table style='width:100%;font-style:italic;font-size:11px;font-weight:normal;color: #4d4d4d;'>";
+	$footerContent .= "<tr>";
+	$footerContent .= "<td class='text-left'>$CompanyDetails</td>";
+	$footerContent .= "<td class='text-right'>Page {PAGENO} of {nbpg}</td>";
+	$footerContent .= "</tr>";
+	$footerContent .= "</table>";
+	
+	$HTMLSetupArr = array();
+	$HTMLSetupArr["Header"] = $headerContent;
+	$HTMLSetupArr["Footer"] = $footerContent;
+	$HTMLSetupArr["format"] = "A4";
+	$HTMLSetupArr["orientation"] = "L";
+	$HTMLSetupArr["File_Name"] = "PurchaseSummary_".date("ymdhisu");
+	GVGenerateHTMLtoPDF($htmlContent, $HTMLSetupArr);
+	
+	include("gv_footer.php");
+?>

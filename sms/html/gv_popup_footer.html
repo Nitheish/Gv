@@ -1,0 +1,44 @@
+<? include("gv_page_footer_content.html"); ?>
+</div>
+		
+<div class="GVpopUpPageFooter">
+	<?
+		if($GVBackBtnInd == 1)
+		GVInputButton("$GVBackBtnVal","GVBackBtn","GVBackBtn","button","SECONDARY","","onclick=setGVPageSession(\"\",\"$GV_PopupCloseSS\",2);"); 
+		
+		if($GVsaveBtnInd == 1)
+		GVInputButton("$GVSaveBtnVal","GVSaveBtn","GVSaveBtn","submit","THEME","float:right;",""); 
+	?>
+</div>
+
+<script type='text/javascript'>
+	GVStopLoader();
+	
+	$("form").submit(function() 
+	{
+	  	GVcallLoader();
+	});
+	
+	var _iframeHeight = parent.document.getElementById('GVPOPIN').style.height;
+	var _iframe = parent.document.getElementById('GVPopFrame');
+	
+	_iframeHeight = _iframeHeight.replace("px", "");
+	_iframeHeight = _iframeHeight - 70;
+	
+	if($("#popupDivMain").length > 0)
+	{
+		var popupDivHeight = _iframeHeight + "px";
+		
+		$("#popupDivMain").css({"min-height":popupDivHeight});
+		$("#popupDivMain").css({"max-height":popupDivHeight});
+	}
+	
+	function GVPagePerRecord_onchange()
+	{
+		document.getElementById("currentPage").value = 1;
+		GVcallLoader();
+		GVformPost();
+	}
+</script>
+
+</form>

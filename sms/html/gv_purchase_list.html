@@ -1,0 +1,320 @@
+	<style>
+	.form-group {
+	    margin-bottom: 0px;
+	}
+	</style>
+	<?
+		include("page_header.html");
+		
+		if($txtSortName == "")
+			$txtSortName = "purchase_id";
+		
+		if($txtSortMethod == "" || !in_array($txtSortMethod,$GV_sortingArr))
+			$txtSortMethod = "desc";
+		
+		if($GVorderBy == "")
+			$GVorderBy = $txtSortName." ".$txtSortMethod;
+		
+		$customerCodeArr = array();
+		$customerArr = array();
+		$customerArr[0] = "Non Vendor";
+		$MySelectQry = "select vendor_name,vendor_phone,vendor_id,vendor_code from vendor_info where";
+		$MySelectQry .= " company_id=?";MYSQL_BuildArray("company_id",$company_id,"s");
+		$MySelectQry .= " and delete_ind=?";MYSQL_BuildArray("delete_ind",'0',"s");
+		$MyDbResult =  MyDbQuery($MySelectQry,$_GVParamArray);	
+		while($MyRowData = mysqli_fetch_array($MyDbResult, MYSQLI_ASSOC)) 
+		{
+			$customerArr[GVStringFormat($MyRowData['vendor_id'])] = GVStringFormat($MyRowData['vendor_code'])." - ".GVStringFormat($MyRowData['vendor_name']);
+			$customerArr[GVStringFormat($MyRowData['vendor_id'])] .= "<div style='color:#5F5F5F;'><i class='fa fa-mobile-phone' style='font-size: 18px;'></i> ".GVStringFormat($MyRowData['vendor_phone'])."</div>";
+			$customerCodeArr[GVStringFormat($MyRowData['vendor_code'])] = GVStringFormat($MyRowData['vendor_id']);
+		}
+		MyDbFreeResult($MyDbResult);
+		
+		$statusArr = array();
+		$statusArr[""] = "ALL"; 
+		$statusArr["PAID"] = "Paid"; 
+		$statusArr["PARTIAL PAID"] = "Partial Paid";
+		$statusArr["NOT PAID"] = "Not Paid"; 
+		$statusArr["OVERPAID"] = "Over Paid"; 
+		
+		$page_name = "gv_purchase_list";
+		
+		if($GVSaveBtn == "SEARCH" || $GVSaveBtn == "RESET" || $hiddenPostMethod == "STATUS_LIST")
+		{
+			$currentPage = 1;
+			$startRecord = 0;
+			$hiddenPostMethod = "";
+		}
+		
+		$serachOptArr = array();
+		$serachOptArr["PURCHASECODE"] = "Purchase No";
+		$serachOptArr["VENDORCODE"] = "Vendor No";
+		$serachOptArr["VENDORNAME"] = "Vendor Name";
+		
+		if($cboSearchOpt == "")
+			$cboSearchOpt = "PURCHASECODE";
+		
+		$pagePerRecordArr = array();
+		$pagePerRecordArr[10] = 10;
+		$pagePerRecordArr[25] = 25;
+		$pagePerRecordArr[50] = 50;
+		
+		$FILTER_OPTION = "SAVE";
+		$FILTER_ARR["cboSearchOpt"] = $cboSearchOpt;
+		$FILTER_ARR["txtSearchStr"] = $txtSearchStr;
+		$FILTER_ARR["txtRangeDate"] = $txtRangeDate;
+		$FILTER_ARR["cboStatus"] = $cboStatus;
+		include("../backend/gv_filter_info.php"); 
+		$GVPaginationInd = 1;
+		
+		$txtRangeDateStart = "";
+		$txtRangeDateEnd = "";
+		
+		if($txtRangeDate != "")
+		{
+			$txtRangeDateStart = GVGetDateDBformat(substr($txtRangeDate,0,10));
+			$txtRangeDateEnd = GVGetDateDBformat(substr($txtRangeDate,13,10));
+		}
+		
+		$MySelectQry = "select pi.*,count(purchase_id) over() as totCnt";
+		$MySelectQry .= " from purchase_info pi where";
+		$MySelectQry .= " company_id=?";MYSQL_BuildArray("company_id",$company_id,"s");
+		$MySelectQry .= " and delete_ind=?";MYSQL_BuildArray("delete_ind","0","s");
+		
+		if($cboStatus != "")
+		{
+			$MySelectQry .= " and status=?";MYSQL_BuildArray("status",$cboStatus,"s");
+		}
+		
+		if($txtRangeDate != "")
+		{
+			if($txtRangeDateStart == $txtRangeDateEnd)
+			{
+				$MySelectQry .= " and purchase_date=?";MYSQL_BuildArray("purchase_date",$txtRangeDateStart,"s");
+			}
+			else
+			{
+				$MySelectQry .= " and purchase_date between ? ";MYSQL_BuildArray("purchase_date",$txtRangeDateStart,"s");
+				$MySelectQry .= " and ?";MYSQL_BuildArray("purchase_date",$txtRangeDateEnd,"s");
+			}
+		}
+							
+		if($cboSearchOpt == "PURCHASECODE" && strlen($txtSearchStr) > 0)
+		{
+			$MySelectQry .= " and purchase_code=?";MYSQL_BuildArray("purchase_code",strtoupper($txtSearchStr),"s");
+		}
+		else if($cboSearchOpt == "VENDORCODE" && strlen($txtSearchStr) > 0)
+		{
+			if(array_key_exists(strtoupper($txtSearchStr), $customerCodeArr))
+				$vendor_id = $customerCodeArr[strtoupper($txtSearchStr)];
+			else
+				$vendor_id = -1;
+				
+			$MySelectQry .= " and vendor_id=?";MYSQL_BuildArray("vendor_id",$vendor_id,"s");
+		}
+		else if($cboSearchOpt == "VENDORNAME" && strlen($txtSearchStr) > 0)
+		{
+			$MySelectQry .= " and exists(select vendor_id from vendor_info vi where";
+			$MySelectQry .= " vi.company_id=?";MYSQL_BuildArray("company_id",$company_id,"s");
+			$MySelectQry .= " and vi.delete_ind=?";MYSQL_BuildArray("delete_ind","0","s");
+			$MySelectQry .= " and vi.vendor_name like CONCAT('%', ?, '%')";MYSQL_BuildArray("vendor_name",$txtSearchStr,"s");
+			$MySelectQry .= " and vi.vendor_id=pi.vendor_id)";
+		}
+		
+		$MySelectQry .= " order by $GVorderBy LIMIT $numRecordPerPage offset $startRecord";
+		$MyDbResult =  MyDbQuery($MySelectQry,$_GVParamArray);
+		$MyNumRows = MyDbNumRows($MyDbResult);
+		$MyRowData = mysqli_fetch_array($MyDbResult, MYSQLI_ASSOC);
+		$totNumRecord = GVStringFormat($MyRowData['totCnt']);
+	?>
+	<div class="container-fluid">
+		<div class="row" style='padding: 12px 7px 0px 0px;'>
+			<div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
+				<label class="MyTextHeading"><i class='fa fa-cart-arrow-down'></i><span>Purchase Details List</span></label>
+			</div>
+		</div>
+		
+		<div class='GVSearchBar'>
+			<?
+			echo "<label class='MyLabelText text-left' style='margin:3px;'>Search</label>";
+			GVComboBox("INPUT","cboSearchOpt","cboSearchOpt",$serachOptArr,"","width:150px;margin-left: 5px;","onchange='cboSearchOpt_onchanged(this.value);'");
+			GVTextBox("INPUT","txtSearchStr","txtSearchStr","","width:200px;margin-left: 5px;","maxlength='35' placeholder='Customer Name'"); 
+			GVDateRangeBox("INPUT", "txtRangeDate", "txtRangeDate", "", "margin-left:5px;width:180px;border-radius: 5px;", "readonly placeholder='Date Range'");
+					
+			GVimageButton("SEARCH","GVSaveBtn","GVSearchBtn",GVimage("image","image","/gvtech/images/search.png","","","width='15'"),"submit","SECONDARY","margin-left:5px;height:27px;font-size:11px;","");  
+			GVimageButton("RESET","GVSaveBtn","GVResetBtn",GVimage("image","image","/gvtech/images/Refresh.png","","","width='15'"),"button","SECONDARY","margin-left:5px;height:27px;font-size:11px;","onclick='reset_btnClick();'");  
+			
+			echo "<label class='MyLabelText text-left' style='margin:3px;margin-left: 5px;'>Show</label>";
+			GVComboBox("INPUT","numRecordPerPage","numRecordPerPage",$pagePerRecordArr,"","margin-left: 5px;width:50px;","onchange='GVPagePerRecord_onchange();'"); 
+			echo "<label class='MyLabelText text-left' style='margin:3px;margin-left: 2px;'>Records</label>";
+			
+			echo "<label class='MyLabelText text-left' style='margin:3px;margin-left: 5px;'>Status </label>";
+			GVComboBox("INPUT","cboStatus","cboStatus",$statusArr,"","width:120px;margin-left: 5px;","onchange='GVformSubmitCall(\"STATUS_LIST\");'");
+			
+			$pdfLink = "../backend/gv_page_redirect.php?SkipSSDataInd=1".GVqueryString("LoadHtmlPage=gv_purchase_list_export&GVmenu=$GVmenu&cboSearchOpt=$cboSearchOpt&txtSearchStr=$txtSearchStr&GVorderBy=$GVorderBy&cboStatus=$cboStatus&txtRangeDate=$txtRangeDate");
+			GVanchor("GVPdf","GVPdf","$pdfLink","",GVimage("GVPdf","GVPdf","/gvtech/images/pdf.png","","cursor:pointer;float:right;margin-left: auto;width:27px;height:27px;margin-left:10px;padding:3px;","title='Export to PDF'"),"","");
+			
+			$AddURL = GVstringEncrption("LoadHtmlPage=gv_purchase_info&GVmenu=$GVmenu&GVSTEP=ADD");
+			GVimageButton("ADD NEW","GVloginBtn","GVloginBtn",GVimage("image","image","/gvtech/images/add.png","","","width='15'"),"button","SECONDARY","text-align: right;float: right;margin-left: auto;height:27px;font-size:11px;","onclick=GVcallLoader();setGVPageSession('$AddURL','$GV_PageSSDATA',1);");  
+			?>
+		</div>
+		
+		<? if($totNumRecord > 0) { ?>
+		
+		<div id='mainTableID' class="table-responsive GVtableHeadDIV" style='overflow-y:auto;width:100%;'>          
+			<table class="table table-hover GVtableHeadFixed" style='width:100%;margin-top:0px !important;'>
+				<thead>
+					<tr>
+						<th width='5%' class='GVtableHead text-center'>S.No</th>
+						<th width='10' class='GVtableHead text-left'>Purchase Date<? GVSortMethod("purchase_date",$txtSortMethod); ?></th>
+						<th width='9%' class='GVtableHead text-left'>Purchase No<? GVSortMethod("purchase_id",$txtSortMethod); ?></th>
+						<th width='15%' class='GVtableHead text-left'>Vendor Name</th>
+						<th width='8%' class='GVtableHead text-left'>Bill Type<? GVSortMethod("purchase_type",$txtSortMethod); ?></th>
+						<th width='8%' class='GVtableHead text-right'>Total Qty<? GVSortMethod("tot_qty",$txtSortMethod); ?></th>
+						<th width='12%' class='GVtableHead text-right'>Overall&nbsp;(&nbsp;<i class='fa fa-rupee'></i>&nbsp;)<? GVSortMethod("overall_amount",$txtSortMethod); ?></th>
+						<th width='8%' class='GVtableHead text-right'>Paid&nbsp;(&nbsp;<i class='fa fa-rupee'></i>&nbsp;)<? GVSortMethod("paid_amt",$txtSortMethod); ?></th>
+						<th width='9%' class='GVtableHead text-right'>Balance&nbsp;(&nbsp;<i class='fa fa-rupee'></i>&nbsp;)<? GVSortMethod("balance_due",$txtSortMethod); ?></th>
+						<th width='9%' class='GVtableHead text-center'>Status<? GVSortMethod("status",$txtSortMethod); ?></th>
+						<th width='7%' class='GVtableHead text-center'>Action</th>
+					</tr>
+				</thead>
+				
+				<tbody>
+					<?
+					$recCount = $startRecord;
+					do
+					{
+						$purchase_id = GVStringFormat($MyRowData['purchase_id']);
+						$purchase_code = GVStringFormat($MyRowData['purchase_code']);
+						$purchase_date = GVGetUserDateformat(GVStringFormat($MyRowData['purchase_date']));
+						$vendor_name = $customerArr[GVStringFormat($MyRowData['vendor_id'])];
+						
+						if(GVStringFormat($MyRowData['purchase_type']) == 1)
+							$purchase_type = "Credit";
+						else
+							$purchase_type = "Cash";
+						
+						$tot_qty = GVStringFormat($MyRowData['tot_qty']);
+						$overall_amount = GVformatAmount(GVStringFormat($MyRowData['overall_amount']));
+						$paid_amt = GVformatAmount(GVStringFormat($MyRowData['paid_amt']));
+						$balance_due = GVformatAmount(GVStringFormat($MyRowData['balance_due']));
+						$status = GVStringFormat($MyRowData['status']);
+						
+						if($status == "PAID")
+							$status = "<span class='badge badge-success' style='font-size:10px;padding:7px;'>Paid</span>";
+						else if($status == "PARTIAL PAID")
+							$status = "<span class='badge badge-warning' style='font-size:10px;padding:7px;'>Partial Paid</span>";
+						else if($status == "OVERPAID")
+							$status = "<span class='badge badge-danger' style='font-size:10px;padding:7px;'>Over Paid</span>";
+						else
+							$status = "<span class='badge badge-danger' style='font-size:10px;padding:7px;'>Not Paid</span>";
+							
+						$gvCustomDesc = "$purchase_code";
+						$editLink = GVstringEncrption("LoadHtmlPage=gv_purchase_info_view&GVmenu=$GVmenu&GVsubMenu=$GVsubMenu&GVSTEP=EDIT&GVID=$purchase_id");
+						$DelLink = GVstringEncrption("LoadHtmlPage=gv_purchase_info_del&GVSTEP=DELETE&GVID=$purchase_id&gvCustomDesc=$gvCustomDesc");
+						
+						$recCount++;
+						?>
+						
+						<tr>
+							<td class='GVtableData text-center'><? echo $recCount; ?></td>
+							<td class='GVtableData text-left'><? echo $purchase_date; ?></td>
+							<td class='GVtableData text-left'><? echo $purchase_code; ?></td>
+							<td class='GVtableData text-left'><? echo $vendor_name; ?></td>
+							<td class='GVtableData text-left'><? echo $purchase_type; ?></td>
+							<td class='GVtableData text-right'><? echo $tot_qty; ?></td>
+							<td class='GVtableData text-right'><? echo GVCurrecyFormat($overall_amount, 1); ?></td>
+							<td class='GVtableData text-right'><? echo GVCurrecyFormat($paid_amt, 1); ?></td>
+							<td class='GVtableData text-right'><? echo GVCurrecyFormat($balance_due, 1); ?></td>
+							<td class='GVtableData text-center'><? echo $status; ?></td>
+							<td class='GVtableData text-center'> 
+							<?
+								echo GVimage("GVedit","GVedit","/gvtech/images/edit.png","","cursor:pointer;","width='15' title='Edit' onclick=GVcallLoader();setGVPageSession('$editLink','$GV_PageSSDATA',1);");
+								
+								if($paid_amt == 0)
+								{
+									echo GVimage("GVdel","GVdel","/gvtech/images/delete.png","","margin-left:7px;cursor:pointer;","width='15' title='Delete' onclick=setGVPopupSession('$DelLink','$GV_PopupSSDATA',400,150);");
+								}
+							?>
+							</td>
+						</tr>
+						
+					<?
+					}
+					while($MyRowData = mysqli_fetch_array($MyDbResult, MYSQLI_ASSOC));
+					?>
+					
+				</tbody>
+			</table>
+		</div>
+		<? } else { ?>
+			<div class="row" style='padding-top:75px;'>
+				<div class="col-lg-12 col-md-12 col-sm-12 col-xs-12 text-center">
+					<? if(strlen($txtSearchStr) > 0 || $cboStatus != "" || $txtRangeDate != "") { ?>
+					<label class="MyTextWarning"><? echo GVimage("image","image","/gvtech/images/search.png","","","width='75'");  ?><br>No data found Please change the filter</label><br>
+					<? GVInputButton("Reset","GVSaveBtn","GVSaveBtn","submit","SECONDARY","","onclick='reset_btnClick();'");?>
+					<? } else if($totNumRecord == 0) { ?>
+					<label class="MyTextWarning"><i class='fa fa-cart-arrow-down'></i><br><br>You don't have any Purchase Information</label>
+					<? } ?>
+				</div>
+			</div>
+		<? } ?>
+		
+		<? include("gv_pagination.html"); ?>
+	</div>
+	
+	<? include("page_footer.html"); ?>
+	
+	<script type='text/javascript'>
+		var windowHeight = window.innerHeight * 0.71;
+		
+		if(document.getElementById("mainTableID"))
+		{
+			document.getElementById("mainTableID").style.maxHeight = windowHeight;
+			document.getElementById("mainTableID").style.minHeight = windowHeight;
+		}
+		 
+		function cboSearchOpt_onchanged(value)
+		{
+			var _selectedFilter = $("#cboSearchOpt option:selected").text();
+			$("#txtSearchStr").attr("placeholder", _selectedFilter);
+		}
+		
+		function reset_btnClick()
+		{
+			$('#txtRangeDate').val("");
+			$('#txtRangeDate').attr("placeholder", "Date Range");
+			$("#cboSearchOpt").val("NAME");
+			$("#cboStatus").val("");
+			$("#txtSearchStr").val("");
+			var _selectedFilter = $("#cboSearchOpt option:selected").text();
+			$("#txtSearchStr").attr("placeholder", _selectedFilter);
+			GVcallLoader();
+			GVformPost();
+		}
+		
+		cboSearchOpt_onchanged('<? echo $cboSearchOpt; ?>');
+		
+		$(function() {
+		    var start = moment().subtract(29, 'days');
+		    var end = moment();
+		
+		    function cb(start, end) {
+		        $('#txtRangeDate').val(start.format('DD-MM-YYYY') + ' - ' + end.format('DD-MM-YYYY'));
+		    }
+		
+		    $('#DR_txtRangeDate').daterangepicker({
+		    	locale: { format: 'DD-MM-YYYY' },
+		        startDate: start,
+		        endDate: end,
+		        ranges: {
+		           'Today': [moment(), moment()],
+		           'Yesterday': [moment().subtract(1, 'days'), moment().subtract(1, 'days')],
+		           'Last 7 Days': [moment().subtract(6, 'days'), moment()],
+		           'Last 30 Days': [moment().subtract(29, 'days'), moment()],
+		           'This Month': [moment().startOf('month'), moment().endOf('month')],
+		           'Last Month': [moment().subtract(1, 'month').startOf('month'), moment().subtract(1, 'month').endOf('month')]
+		        }
+		    }, cb);
+		});
+		</script>

@@ -1,0 +1,452 @@
+	<? 
+		include("page_header.html");
+		include("../info/gv_report_info.php"); 
+		include("gv_submenu.html");
+		include("../info/gv_monthly_statistics.php"); 
+	?>
+	
+	<style>
+	.form-group {
+	    margin-bottom: 0px;
+	}
+	</style>
+	
+	<div class="container-fluid" style='padding-bottom:50px;'>
+		<div class="row" style='padding:12px 7px 0px 0px;'>
+			<div class="col-lg-6 col-md-6 col-sm-6 col-xs-6">
+				<label class="MyTextHeading"><i class='fa fa-area-chart'></i><span>Monthly Statistics</span></label>
+			</div>
+			
+			<div class="col-lg-6 col-md-6 col-sm-6 col-xs-6 text-right" style='display:flex;'>
+			<?
+				echo "<label class='MyLabelText text-left' style='margin:3px;'>Statistics Year</label>";
+				GVComboBox("INPUT","cboYear","cboYear",$yearArr,"","flex: 0 0 auto;width:80px !important;margin-left: 5px;","onchange='GVformSubmitCall(\"STATISTICS_YR_CHANGE\");'");
+				
+				//echo "<label class='MyLabelText text-left' style='margin:3px;margin-left:20px;'>Products</label>";
+				//GVComboBox("INPUT","cboProduct","cboProduct",$yearArr,"","flex: 0 0 auto;width:80px !important;margin-left: 5px;","onchange='cboSearchOpt_onchanged(this.value);'");
+			?>
+			</div>
+		</div>
+		
+		<div class="row">
+		
+		<div class="col-lg-12 col-md-12 col-sm-12 col-xs-12 text-center">
+		<div class="card" style='margin-top:10px;'>
+			<div class="card-header" style='background-color: #E7E9EB;'>
+			<label class='MyLabelText' style='margin:0px;padding:0px;'>YOY Sales Report</label>
+			</div>
+			<div class="card-body" id='AccountDIV' style='overflow-y:auto;width:100%;'>
+				<div class="row">
+					<div class="col-lg-12 col-md-12 col-sm-12 col-xs-12 text-center">
+						<div>
+							<div class="row">
+								<div class="col-lg-4 col-md-4 col-sm-4 col-xs-4 text-right">
+									<label class="MyLabelText">YOY Total Products</label>
+								</div>
+								
+								<div class="col-lg-4 col-md-4 col-sm-4 col-xs-4 text-right">
+									<label class="MyLabelText" style="color:#000;font-weight: normal;">
+									<? echo $yoyTotProduct;?>
+									</label>
+								</div>
+							</div>
+							
+							<div class="row">
+								<div class="col-lg-4 col-md-4 col-sm-4 col-xs-4 text-right">
+									<label class="MyLabelText">YOY Total Sales Amount</label>
+								</div>
+								
+								<div class="col-lg-4 col-md-4 col-sm-4 col-xs-4 text-right">
+									<label class="MyLabelText" style="color:#000;font-weight: normal;">
+									<? echo GVCurrecyFormat($yoyTotSalesAmt);?>
+									</label>
+								</div>
+							</div>
+							
+							<div class="row">
+								<div class="col-lg-4 col-md-4 col-sm-4 col-xs-4 text-right">
+									<label class="MyLabelText">YOY Total Sales Profit Amount</label>
+								</div>
+								
+								<div class="col-lg-4 col-md-4 col-sm-4 col-xs-4 text-right">
+									<label class="MyLabelText" style="color:#000;font-weight: normal;">
+									<? echo GVCurrecyFormat($yoyTotSalesProfitAmt);?>
+									</label>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+		</div>
+		
+		<div class="col-lg-12 col-md-12 col-sm-12 col-xs-12 text-center">
+		<div class="card" style='margin-top:10px;'>
+			<div class="card-header" style='background-color: #E7E9EB;'>
+			<label class='MyLabelText' style='margin:0px;padding:0px;'>Monthly Product Report Chart</label>
+			</div>
+			<div class="card-body" id='AccountDIV' style='overflow-y:auto;width:100%;'>
+				<div class="row">
+					<div class="col-lg-12 col-md-12 col-sm-12 col-xs-12 text-center">
+						<? include_once("../backend/gv_rgraph.php"); ?>
+						
+						
+						<div>
+						    <div id="Product_Qty_Report" style="height:350px;width:1000px;"></div>
+						</div>
+						
+						<script>
+						   
+						var _monProdArr = <? echo json_encode($monProdArr) ?>;
+						var _monArr = <? echo json_encode($monArr) ?>;
+						
+						const _dataArr = _monProdArr.map(value => ({
+						  value,
+						  itemStyle: { color: '#058DC7' }
+						}));
+						
+						var chartDom = document.getElementById('Product_Qty_Report');
+						var myChart = echarts.init(chartDom);
+						var option;
+						
+						option = {
+						grid: {
+						    left: '9%',
+						  },
+						tooltip: {
+						formatter: '{b}: {c}'
+						},
+						xAxis: {
+						type: 'category',
+						data: _monArr,
+						  axisLabel: {
+						    rotate: 45,
+						    textStyle: {
+						      fontSize: 12, 
+						      color: '#000'
+						    }
+						  }
+						},
+						yAxis: {
+						type: 'value',
+						  axisLabel: {
+						    formatter: function (value) {
+						      return value;
+						    },
+						    textStyle: {
+						      fontSize: 10, 
+						      color: '#000'
+						    }
+						  }
+						},
+						series: [{
+						type: 'bar',
+						 label: {
+					          show: true,
+					          position: 'top',
+					          formatter: function (params) {
+					            return Number(params.value);
+					          },
+					          textStyle: {
+						      fontSize: 10, 
+						      color: '#000',
+						      fontWeight: 'bold'
+						    }
+					        },
+						data: _dataArr,
+						barWidth: 40
+						}]
+						};
+						myChart.setOption(option);
+						</script>
+					</div>
+				</div>
+			</div>
+		</div>
+		</div>
+		
+		<div class="col-lg-12 col-md-12 col-sm-12 col-xs-12 text-center">
+		<div class="card" style='margin-top:10px;'>
+			<div class="card-header" style='background-color: #E7E9EB;'>
+			<label class='MyLabelText' style='margin:0px;padding:0px;'>Monthly Sales Report Chart</label>
+			</div>
+			<div class="card-body" id='AccountDIV' style='overflow-y:auto;width:100%;'>
+				<div class="row">
+					<div class="col-lg-12 col-md-12 col-sm-12 col-xs-12 text-center">
+						<? include_once("../backend/gv_rgraph.php"); ?>
+						
+						<div>
+						    <div id="Product_Sales_Report" style="height:350px;width:1000px;"></div>
+						</div>
+						
+						<script>
+						var _monArr = <? echo json_encode($monArr) ?>;
+						var _monOverallSalesArr = <? echo json_encode($monOverallSalesArr) ?>;
+						
+						const _dataArr1 = _monOverallSalesArr.map(value => ({
+						  value,
+						  itemStyle: { color: '#50B332' }
+						}));
+						
+						var chartDom = document.getElementById('Product_Sales_Report');
+						var myChart = echarts.init(chartDom);
+						var option;
+						
+						option = {
+						grid: {
+						    left: '9%',
+						  },
+						tooltip: {
+						formatter: '{b}: \u20B9 {c}'
+						},
+						xAxis: {
+						type: 'category',
+						data: _monArr,
+						  axisLabel: {
+						    rotate: 45,
+						    textStyle: {
+						      fontSize: 12, 
+						      color: '#000'
+						    }
+						  }
+						},
+						yAxis: {
+						type: 'value',
+						  axisLabel: {
+						    formatter: function (value) {
+						      return '\u20B9 ' + value.toLocaleString('en-IN',{ minimumFractionDigits: 2 });
+						    },
+						    textStyle: {
+						      fontSize: 10, 
+						      color: '#000'
+						    }
+						  }
+						},
+						series: [{
+						type: 'bar',
+						 label: {
+					          show: true,
+					          position: 'top',
+					          formatter: function (params) {
+					            return '\u20B9 ' + Number(params.value).toLocaleString('en-IN', { minimumFractionDigits: 2 });
+					          },
+					          textStyle: {
+						      fontSize: 10, 
+						      color: '#000',
+						      fontWeight: 'bold'
+						    }
+					        },
+						data: _dataArr1,
+						barWidth: 40
+						}]
+						};
+						
+						myChart.setOption(option);
+						</script>
+					</div>
+				</div>
+			</div>
+		</div>
+		</div>
+		
+		<div class="col-lg-12 col-md-12 col-sm-12 col-xs-12 text-center">
+		<div class="card" style='margin-top:10px;'>
+			<div class="card-header" style='background-color: #E7E9EB;'>
+			<label class='MyLabelText' style='margin:0px;padding:0px;'>Monthly Profit Report Chart</label>
+			</div>
+			<div class="card-body" id='AccountDIV' style='overflow-y:auto;width:100%;'>
+				<div class="row">
+					<div class="col-lg-12 col-md-12 col-sm-12 col-xs-12 text-center">
+						<? include_once("../backend/gv_rgraph.php"); ?>
+						
+						<div>
+						    <div id="Product_profit_Report" style="height:350px;width:1000px;"></div>
+						</div>
+						
+						<script>
+						var _monArr = <? echo json_encode($monArr) ?>;
+						var _monProfitArr = <? echo json_encode($monProfitArr) ?>;
+						
+						const _dataArr2 = _monProfitArr.map(value => ({
+						  value,
+						  itemStyle: { color: '#EC561B' }
+						}));
+						
+						var chartDom = document.getElementById('Product_profit_Report');
+						var myChart = echarts.init(chartDom);
+						var option;
+						
+						option = {
+						grid: {
+						    left: '9%',
+						  },
+						tooltip: {
+						formatter: '{b}: \u20B9 {c}'
+						},
+						xAxis: {
+						type: 'category',
+						data: _monArr,
+						  axisLabel: {
+						    rotate: 45,
+						    textStyle: {
+						      fontSize: 12, 
+						      color: '#000'
+						    }
+						  }
+						},
+						yAxis: {
+						type: 'value',
+						  axisLabel: {
+						    formatter: function (value) {
+						      return '\u20B9 ' + value.toLocaleString('en-IN',{ minimumFractionDigits: 2 });
+						    },
+						    textStyle: {
+						      fontSize: 10, 
+						      color: '#000'
+						    }
+						  }
+						},
+						series: [{
+						type: 'bar',
+						 label: {
+					          show: true,
+					          position: 'top',
+					          formatter: function (params) {
+					            return '\u20B9 ' + Number(params.value).toLocaleString('en-IN', { minimumFractionDigits: 2 });
+					          },
+					          textStyle: {
+						      fontSize: 10, 
+						      color: '#000',
+						      fontWeight: 'bold'
+						    }
+					        },
+						data: _dataArr2,
+						barWidth: 40
+						}]
+						};
+						
+						myChart.setOption(option);
+						</script>
+					</div>
+				</div>
+			</div>
+		</div>
+		</div>
+		
+		<div class="col-lg-12 col-md-12 col-sm-12 col-xs-12 text-center">
+		<div class="card" style='margin-top:10px;'>
+			<div class="card-header" style='background-color: #E7E9EB;'>
+			<label class='MyLabelText' style='margin:0px;padding:0px;'>Monthly Sales & Profit Report Chart</label>
+			</div>
+			<div class="card-body" id='AccountDIV' style='overflow-y:auto;width:100%;'>
+				<div class="row">
+					<div class="col-lg-12 col-md-12 col-sm-12 col-xs-12 text-center">
+						<? include_once("../backend/gv_rgraph.php"); ?>
+						
+						<div>
+						    <div id="Product_salesprofit_Report" style="height:350px;width:1600px;"></div>
+						</div>
+						
+						<script>
+						var _monArr = <? echo json_encode($monArr) ?>;
+						var _monProfitArr = <? echo json_encode($monProfitArr) ?>;
+						var _monOverallSalesArr = <? echo json_encode($monOverallSalesArr) ?>;
+						
+						const _dataArr3 = _monOverallSalesArr.map(value => ({
+						  value,
+						  itemStyle: { color: '#50B332' }
+						}));
+						
+						const _dataArr4 = _monProfitArr.map(value => ({
+						  value,
+						  itemStyle: { color: '#EC561B' }
+						}));
+						
+						var chartDom = document.getElementById('Product_salesprofit_Report');
+						var myChart = echarts.init(chartDom);
+						var option;
+						
+						option = {
+						grid: {
+						    left: '7%',
+						  },
+						tooltip: {
+						  trigger: 'axis',
+						  formatter: function (params) {
+						    let result = params[0].axisValue + '<br/>';
+						    params.forEach(item => {
+						      const val = typeof item.data === 'object' ? item.data.value : item.data;
+						      result += `${item.marker} ${item.seriesName} : \u20B9 ${val}<br/>`;
+						    });
+						    return result;
+						  }
+						},
+						xAxis: {
+						type: 'category',
+						data: _monArr,
+						  axisLabel: {
+						    rotate: 45,
+						    textStyle: {
+						      fontSize: 12, 
+						      color: '#000'
+						    }
+						  }
+						},
+						yAxis: {
+						type: 'value',
+						  axisLabel: {
+						    formatter: function (value) {
+						      return '\u20B9 ' + value.toLocaleString('en-IN',{ minimumFractionDigits: 2 });
+						    },
+						    textStyle: {
+						      fontSize: 10, 
+						      color: '#000'
+						    }
+						  }
+						},
+						series: [{
+						name:'Sales',
+						type: 'bar',
+						 label: {
+					          show: true,
+					          position: 'top',
+					          textStyle: {
+						      fontSize: 10, 
+						      color: '#000',
+						      fontWeight: 'bold'
+						    }
+					        },
+						data: _dataArr3,
+						barWidth: 40
+						},{
+						name:'Profit',
+						type: 'bar',
+						 label: {
+					          show: true,
+					          position: 'top',
+					          textStyle: {
+						      fontSize: 10, 
+						      color: '#000',
+						      fontWeight: 'bold'
+						    }
+					        },
+						data: _dataArr4,
+						barWidth: 40
+						}]
+						};
+						
+						myChart.setOption(option);
+						</script>
+					</div>
+				</div>
+			</div>
+		</div>
+		</div>
+		
+		</div>
+	</div>
+	
+	<? 
+		include("page_footer.html"); 
+	?>

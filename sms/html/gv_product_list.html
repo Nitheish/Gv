@@ -1,0 +1,322 @@
+	<style>
+	.form-group {
+	    margin-bottom: 0px;
+	}
+	</style>
+	<?
+		include("page_header.html");
+		include("../info/gv_setting_info.php"); 
+		include("gv_submenu.html");
+		
+		if($txtSortName == "")
+			$txtSortName = "product_id";
+		
+		if($txtSortMethod == "" || !in_array($txtSortMethod,$GV_sortingArr))
+			$txtSortMethod = "desc";
+			
+		if($GVorderBy == "")
+			$GVorderBy = $txtSortName." ".$txtSortMethod;
+		
+		$page_name = "gv_product_list";
+		
+		if($GVSaveBtn == "SEARCH" || $GVSaveBtn == "RESET" || $hiddenPostMethod == "PORDUCT_LIST" || $hiddenPostMethod == "OPTION_LIST" || $hiddenPostMethod == "CATEGORY_LIST")
+		{
+			$currentPage = 1;
+			$startRecord = 0;
+			$hiddenPostMethod = "";
+		}
+		
+		$productOptArr = array();
+		$productOptArr[""] = "All Stocks";
+		$productOptArr["AVAILABLE"] = "Available Stock";
+		$productOptArr["OUTOFSTACK"] = "Out Of Stock";
+		$productOptArr["LOWSTOCK"] = "Low Stock";
+		$productOptArr["SOLDSTOCK"] = "Sold Stock";
+		
+		$listOptArr = array();
+		$listOptArr[""] = "--- Default Listing ---";
+		$listOptArr["QTYRATE"] = "Quantity With Purchase Rate";
+		$listOptArr["QTYPROFIT"] = "Quantity With Profit";
+		$listOptArr["ASSET"] = "Quantity Asset With Profit";
+		$listOptArr["ASSETAMT"] = "Asset Amount With Profit";
+		
+		$pdtCategoryArr = array();
+		$pdtCategoryArr[""] = "All Product Category";
+		$MySelectQry = "select category_name,pdt_category_id from pdt_category_info where";
+		$MySelectQry .= " company_id=?";MYSQL_BuildArray("company_id",$company_id,"s");
+		$MySelectQry .= " order by category_name";
+		$MyDbResult =  MyDbQuery($MySelectQry,$_GVParamArray);	
+		while($MyRowData = mysqli_fetch_array($MyDbResult, MYSQLI_ASSOC)) 
+		{
+			$pdtCategoryArr[GVStringFormat($MyRowData['pdt_category_id'])] = GVStringFormat($MyRowData['category_name']);
+		}
+		MyDbFreeResult($MyDbResult);
+		
+		$serachOptArr = array();
+		$serachOptArr["CODE"] = "Product Code";
+		$serachOptArr["NAME"] = "Product Name";
+		
+		if($cboSearchOpt == "")
+			$cboSearchOpt = "CODE";
+		
+		$pagePerRecordArr = array();
+		$pagePerRecordArr[10] = 10;
+		$pagePerRecordArr[25] = 25;
+		$pagePerRecordArr[50] = 50;
+		
+		$FILTER_OPTION = "SAVE";
+		$FILTER_ARR["cboSearchOpt"] = $cboSearchOpt;
+		$FILTER_ARR["txtSearchStr"] = $txtSearchStr;
+		$FILTER_ARR["cboListOption"] = $cboListOption;
+		$FILTER_ARR["cboProductOption"] = $cboProductOption;
+		$FILTER_ARR["cboPdtCategory"] = $cboPdtCategory;
+		include("../backend/gv_filter_info.php"); 
+		$GVPaginationInd = 1;
+		
+		$MySelectQry = "select pi.*,count(product_id) over() as totCnt";
+		$MySelectQry .= " from product_info pi where";
+		$MySelectQry .= " company_id=?";MYSQL_BuildArray("company_id",$company_id,"s");
+		$MySelectQry .= " and delete_ind=?";MYSQL_BuildArray("delete_ind","0","s");
+		
+		if($cboSearchOpt == "NAME" && strlen($txtSearchStr) > 0)
+		{
+			$MySelectQry .= " and product_name like CONCAT('%', ?, '%')";MYSQL_BuildArray("product_name",$txtSearchStr,"s");
+		}
+		else if($cboSearchOpt == "CODE" && strlen($txtSearchStr) > 0)
+		{
+			$MySelectQry .= " and product_code=?";MYSQL_BuildArray("product_code",strtoupper($txtSearchStr),"s");
+		}
+		
+		if($cboPdtCategory > 0)
+		{
+			$MySelectQry .= " and pdt_category_id=?";MYSQL_BuildArray("pdt_category_id",$cboPdtCategory,"s");
+		}
+		
+		if($cboProductOption == "AVAILABLE")
+		{
+			$MySelectQry .= " and remaining_qty>?";MYSQL_BuildArray("remaining_qty",0,"s");
+		}
+		else if($cboProductOption == "OUTOFSTACK")
+		{
+			$MySelectQry .= " and remaining_qty=?";MYSQL_BuildArray("remaining_qty",0,"s");
+		}
+		else if($cboProductOption == "LOWSTOCK")
+		{
+			$MySelectQry .= " and alert_ind=?";MYSQL_BuildArray("alert_ind",1,"s");
+			$MySelectQry .= " and remaining_qty<=qty_count_alert";
+		}
+		else if($cboProductOption == "SOLDSTOCK")
+		{
+			$MySelectQry .= " and sold_qty>?";MYSQL_BuildArray("sold_qty",0,"s");
+		}
+		
+		$MySelectQry .= " order by $GVorderBy LIMIT $numRecordPerPage offset $startRecord";
+		$MyDbResult =  MyDbQuery($MySelectQry,$_GVParamArray);
+		$MyNumRows = MyDbNumRows($MyDbResult);
+		$MyRowData = mysqli_fetch_array($MyDbResult, MYSQLI_ASSOC);
+		$totNumRecord = GVStringFormat($MyRowData['totCnt']);
+	?>
+	<div class="container-fluid">
+		<div class="row" style='padding:12px 7px 0px 0px;'>
+			<div class="col-lg-4 col-md-4 col-sm-4 col-xs-4">
+				<label class="MyTextHeading"><i class='fa fa-cubes'></i><span>Product Details List</span></label>
+			</div>
+			
+			<div class="col-lg-3 col-md-3 col-sm-3 col-xs-3" style='float:right;'>
+				<? GVComboBox("INPUT","cboPdtCategory","cboPdtCategory",$pdtCategoryArr,"","width:150px;margin-left: 5px;margin-bottom: 5px;","onchange='GVformSubmitCall(\"CATEGORY_LIST\");'"); ?>
+			</div>
+			
+			<div class="col-lg-2 col-md-2 col-sm-2 col-xs-2" style='float:right;'>
+				<? GVComboBox("INPUT","cboProductOption","cboProductOption",$productOptArr,"","width:150px;margin-left: 5px;margin-bottom: 5px;","onchange='GVformSubmitCall(\"PORDUCT_LIST\");'"); ?>
+			</div>
+			
+			<div class="col-lg-3 col-md-3 col-sm-3 col-xs-3" style='float:right;'>
+				<? GVComboBox("INPUT","cboListOption","cboListOption",$listOptArr,"","width:150px;margin-left: 5px;margin-bottom: 5px;","onchange='GVformSubmitCall(\"OPTION_LIST\");'"); ?>
+			</div>
+		</div>
+		
+		<div class='GVSearchBar'>
+			<?
+			echo "<label class='MyLabelText text-left' style='margin:3px;'>Search</label>";
+			GVComboBox("INPUT","cboSearchOpt","cboSearchOpt",$serachOptArr,"","width:150px;margin-left: 5px;","onchange='cboSearchOpt_onchanged(this.value);'");
+			GVTextBox("INPUT","txtSearchStr","txtSearchStr","","width:200px;margin-left: 5px;","maxlength='35' placeholder='Customer Name'"); 
+			
+			GVimageButton("SEARCH","GVSaveBtn","GVSearchBtn",GVimage("image","image","/gvtech/images/search.png","","","width='15'"),"submit","SECONDARY","margin-left:5px;height:27px;font-size:11px;","");  
+			GVimageButton("RESET","GVSaveBtn","GVResetBtn",GVimage("image","image","/gvtech/images/Refresh.png","","","width='15'"),"button","SECONDARY","margin-left:5px;height:27px;font-size:11px;","onclick='reset_btnClick();'");  
+			
+			echo "<label class='MyLabelText text-left' style='margin:3px;margin-left: 5px;'>Show</label>";
+			GVComboBox("INPUT","numRecordPerPage","numRecordPerPage",$pagePerRecordArr,"","margin-left: 5px;width:50px;","onchange='GVPagePerRecord_onchange();'"); 
+			echo "<label class='MyLabelText text-left' style='margin:3px;margin-left: 2px;'>Records</label>";
+			
+			$pdfLink = "../backend/gv_page_redirect.php?SkipSSDataInd=1".GVqueryString("LoadHtmlPage=gv_settings_pdf_export&GVmenu=$GVmenu&GVsubMenu=$GVsubMenu&cboSearchOpt=$cboSearchOpt&txtSearchStr=$txtSearchStr&GVorderBy=$GVorderBy&cboProductOption=$cboProductOption&cboListOption=$cboListOption");
+			GVanchor("GVPdf","GVPdf","$pdfLink","",GVimage("GVPdf","GVPdf","/gvtech/images/pdf.png","","cursor:pointer;float:right;margin-left: auto;width:27px;height:27px;margin-left:10px;padding:3px;","title='Export to PDF'"),"","");
+								
+			$AddURL = GVstringEncrption("LoadHtmlPage=gv_product_info&GVmenu=$GVmenu&GVsubMenu=$GVsubMenu&GVSTEP=ADD");
+			GVimageButton("ADD NEW","GVloginBtn","GVloginBtn",GVimage("image","image","/gvtech/images/add.png","","","width='15'"),"button","SECONDARY","margin-left:auto;text-align: right;float: right;height:27px;font-size:11px;","onclick='setGVPopupSession(\"$AddURL\",\"$GV_PopupSSDATA\",700,400);'");  
+			?>
+		</div>
+		
+		<? if($totNumRecord > 0) { ?>
+		
+		<div id='mainTableID' class="table-responsive GVtableHeadDIV" style='overflow-y:auto;width:100%;'>          
+			<table class="table table-hover GVtableHeadFixed" style='width:100%;margin-top:0px !important;'>
+				<thead>
+					<tr>
+						<th width='4%' class='GVtableHead text-center'>S.No</th>
+						<th width='12%' class='GVtableHead text-left'>product Code<? GVSortMethod("product_id",$txtSortMethod); ?></th>
+						<th width='15%' class='GVtableHead text-left'>Product Name<? GVSortMethod("product_name",$txtSortMethod); ?></th>
+						
+						<? if($cboListOption == "ASSETAMT") { ?>
+						<th width='10%' class='GVtableHead text-right'>Total &nbsp;(&nbsp;<i class='fa fa-rupee'></i>&nbsp;)<? GVSortMethod("tot_purchase_amt",$txtSortMethod); ?></th>
+						<th width='10%' class='GVtableHead text-right'>Sold &nbsp;(&nbsp;<i class='fa fa-rupee'></i>&nbsp;)<? GVSortMethod("tot_sales_amt",$txtSortMethod); ?></th>
+						<th width='12%' class='GVtableHead text-right'>Remaining &nbsp;(&nbsp;<i class='fa fa-rupee'></i>&nbsp;)<? GVSortMethod("remaining_stock_amt",$txtSortMethod); ?></th>
+						<? } else { ?>
+						<th width='10%' class='GVtableHead text-right'>Total Qty<? GVSortMethod("total_qty",$txtSortMethod); ?></th>
+						<th width='10%' class='GVtableHead text-right'>Sold Qty<? GVSortMethod("sold_qty",$txtSortMethod); ?></th>
+						<th width='12%' class='GVtableHead text-right'>Remaining Qty<? GVSortMethod("remaining_qty",$txtSortMethod); ?></th>
+						<? } ?>
+						
+						<? if($cboListOption == "QTYRATE") { ?>
+						<th width='18%' class='GVtableHead text-right'>Last Purchase Rate&nbsp;(&nbsp;<i class='fa fa-rupee'></i>&nbsp;)<? GVSortMethod("buying_amount",$txtSortMethod); ?></th>
+						<? } else if ($cboListOption == "QTYPROFIT" || $cboListOption == "ASSET" || $cboListOption == "ASSETAMT") { ?>
+						<th width='18%' class='GVtableHead text-right'>Profit&nbsp;(&nbsp;<i class='fa fa-rupee'></i>&nbsp;)<? GVSortMethod("product_profit",$txtSortMethod); ?></th>
+						<? } ?>
+						
+						<th width='14%' class='GVtableHead text-right'>Selling Price&nbsp;(&nbsp;<i class='fa fa-rupee'></i>&nbsp;)<? GVSortMethod("sell_amount",$txtSortMethod); ?></th>
+						<th width='5%' class='GVtableHead text-center'>Action</th>
+					</tr>
+				</thead>
+				
+				<tbody>
+					<?
+					$recCount = $startRecord;
+					do
+					{
+						$product_id = GVStringFormat($MyRowData['product_id']);
+						$product_code = GVStringFormat($MyRowData['product_code']);
+						$product_name = GVStringFormat($MyRowData['product_name']);
+						$total_qty = GVStringFormat($MyRowData['total_qty']);
+						$sold_qty = GVStringFormat($MyRowData['sold_qty']);
+						$alert_ind = GVStringFormat($MyRowData['alert_ind']);
+						$qty_count_alert = GVStringFormat($MyRowData['qty_count_alert']);
+						$remaining_qty = GVStringFormat($MyRowData['remaining_qty']);
+						$buying_amount = GVCurrecyFormat(GVformatAmount(GVStringFormat($MyRowData['buying_amount'])), 1);
+						$sell_amount = GVCurrecyFormat(GVformatAmount(GVStringFormat($MyRowData['sell_amount'])), 1);
+						$product_profit = GVCurrecyFormat(GVformatAmount(GVStringFormat($MyRowData['product_profit'])), 1);
+						$tot_purchase_amt = GVCurrecyFormat(GVformatAmount(GVStringFormat($MyRowData['tot_purchase_amt'])), 1);
+						$tot_sales_amt 	= GVCurrecyFormat(GVformatAmount(GVStringFormat($MyRowData['tot_sales_amt'])), 1);
+						$remaining_stock_amt = GVCurrecyFormat(GVformatAmount(GVStringFormat($MyRowData['remaining_stock_amt'])), 1);
+						
+						$gvCustomDesc = "$product_name ($product_code)";
+						$editLink = GVstringEncrption("LoadHtmlPage=gv_product_info&GVmenu=$GVmenu&GVsubMenu=$GVsubMenu&GVSTEP=EDIT&GVID=$product_id");
+						$DelLink = GVstringEncrption("LoadHtmlPage=gv_product_del&GVSTEP=DELETE&GVID=$product_id&gvCustomDesc=$gvCustomDesc");
+						$infoLink = GVstringEncrption("LoadHtmlPage=gv_product_transaction&GVmenu=$GVmenu&GVsubMenu=$GVsubMenu&GVID=$product_id");
+						
+						$recCount++;
+						
+						if($remaining_qty == 0)
+							$product_name .= "<span class='badge badge-danger' style='margin-left:5px;font-size:11px;padding:5px;'>Out of stock</span>";
+						else if($alert_ind == 1)
+						{
+							if($remaining_qty <= $qty_count_alert)
+								$product_name .= "<span class='badge badge-warning' style='margin-left:5px;font-size:11px;padding:5px;'>Low stock</span>";
+						}
+						
+						if($cboListOption == "ASSET")
+						{
+							$product_profit = $sold_qty."<br><br>".$product_profit;
+							$total_qty .= "<br><br>".$tot_purchase_amt;
+							$sold_qty .= "<br><br>".$tot_sales_amt;
+							$remaining_qty .= "<br><br>".$remaining_stock_amt; 
+							
+						}		
+						?>
+						
+						<tr>
+							<td class='GVtableData text-center'><? echo $recCount; ?></td>
+							<td class='GVtableData text-left'><? echo $product_code; ?></td>
+							<td class='GVtableData text-left'><? echo $product_name; ?></td>
+							
+							<? if($cboListOption == "ASSETAMT") { ?>
+							<td class='GVtableData text-right'><? echo $tot_purchase_amt; ?></td>
+							<td class='GVtableData text-right'><? echo $tot_sales_amt; ?></td>
+							<td class='GVtableData text-right'><? echo $remaining_stock_amt; ?></td>
+							<? } else { ?>
+							<td class='GVtableData text-right'><? echo $total_qty; ?></td>
+							<td class='GVtableData text-right'><? echo $sold_qty; ?></td>
+							<td class='GVtableData text-right'><? echo $remaining_qty; ?></td>
+							<? } ?>
+							
+							<? if($cboListOption == "QTYRATE") { ?>
+							<td class='GVtableData text-right'><? echo $buying_amount; ?></td>
+							<? } else if ($cboListOption == "QTYPROFIT" || $cboListOption == "ASSET" || $cboListOption == "ASSETAMT") { ?>
+							<td class='GVtableData text-right'><? echo $product_profit; ?></td>
+							<? } ?>
+							
+							<td class='GVtableData text-right'><? echo $sell_amount; ?></td>
+							<td class='GVtableData text-center'> 
+							<?
+								echo GVimage("GVedit","GVedit","/gvtech/images/edit.png","","cursor:pointer;","width='15' title='Edit' onclick=setGVPopupSession('$editLink','$GV_PopupSSDATA',700,400);");
+								echo GVimage("GVinfo","GVinfo","/gvtech/images/summary.png","","margin-left:7px;cursor:pointer;","width='18' title='Infomation' onclick=GVcallLoader();setGVPageSession('$infoLink','$GV_PageSSDATA',1);");
+								
+								if($sold_qty == 0)
+									echo GVimage("GVdel","GVdel","/gvtech/images/delete.png","","margin-left:7px;cursor:pointer;","width='15' title='Delete' onclick=setGVPopupSession('$DelLink','$GV_PopupSSDATA',400,150);");
+							?>
+							</td>
+						</tr>
+						
+					<?
+					}
+					while($MyRowData = mysqli_fetch_array($MyDbResult, MYSQLI_ASSOC));
+					?>
+					
+				</tbody>
+			</table>
+		</div>
+		<? } else { ?>
+			<div class="row" style='padding-top:75px;'>
+				<div class="col-lg-12 col-md-12 col-sm-12 col-xs-12 text-center">
+					<? if(strlen($txtSearchStr) > 0 || $cboPdtCategory > 0) { ?>
+					<label class="MyTextWarning"><? echo GVimage("image","image","/gvtech/images/search.png","","","width='50'");  ?><br>No data found Please change the filter</label><br>
+					<? GVInputButton("Reset","GVSaveBtn","GVSaveBtn","button","SECONDARY","","onclick='reset_btnClick();'");?>
+					<? } else if($totNumRecord == 0) { ?>
+					<label class="MyTextWarning"><i class='fa fa-cubes'></i><br><br>You don't have any Product Information</label>
+					<? } ?>
+				</div>
+			</div>
+		<? } ?>
+		
+		<? include("gv_pagination.html"); ?>
+	</div>
+	
+	<? include("page_footer.html"); ?>
+	
+	<script type='text/javascript'>
+		var windowHeight = window.innerHeight * 0.71;
+		
+		if(document.getElementById("mainTableID"))
+		{
+			document.getElementById("mainTableID").style.maxHeight = windowHeight;
+			document.getElementById("mainTableID").style.minHeight = windowHeight;
+		}
+		 
+		function cboSearchOpt_onchanged(value)
+		{
+			var _selectedFilter = $("#cboSearchOpt option:selected").text();
+			$("#txtSearchStr").attr("placeholder", _selectedFilter);
+		}
+		
+		function reset_btnClick()
+		{
+			$("#cboSearchOpt").val("NAME");
+			$("#txtSearchStr").val("");
+			$("#cboPdtCategory").val("");
+			var _selectedFilter = $("#cboSearchOpt option:selected").text();
+			$("#txtSearchStr").attr("placeholder", _selectedFilter);
+			GVcallLoader();
+			GVformPost();
+		}
+		
+		cboSearchOpt_onchanged('<? echo $cboSearchOpt; ?>');
+		
+	</script>

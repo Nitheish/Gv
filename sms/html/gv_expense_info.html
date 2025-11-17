@@ -1,0 +1,97 @@
+	<?
+		$GVpageTitle = "EXPENSE INFORMATION";
+		include("gv_popup_header.html");
+		
+		include("../info/gv_expense_info.php"); 
+		
+		if($ErrorInd == 0)
+		{
+			$txtExpenseDate = GVGetCurrentDate();
+			$cboExpenseType = "";
+			$cboPayType = "";
+			$txtExpenseAmt = "0.00";
+			$txtRemarks = "";
+			
+			if($GVSTEP == "EDIT")
+			{
+				$MySelectQry = "select * from expenses_info where";
+				$MySelectQry .= " company_id=?";MYSQL_BuildArray("company_id",$company_id,"s");
+				$MySelectQry .= " and expenses_info_id=?";MYSQL_BuildArray("expenses_info_id",$GVID,"s");
+				$MyDbResult =  MyDbQuery($MySelectQry,$_GVParamArray);	
+				if($MyRowData = mysqli_fetch_array($MyDbResult, MYSQLI_ASSOC)) 
+				{
+					$txtExpenseDate = GVGetUserDateformat(GVStringFormat($MyRowData['expense_date']))	;
+					$cboExpenseType = GVStringFormat($MyRowData['expense_type']);
+					$cboPayType = GVStringFormat($MyRowData['payment_type']);
+					$txtRemarks = GVStringFormat($MyRowData['expense_remarks']);
+					$txtExpenseAmt = GVformatAmount(GVStringFormat($MyRowData['expense_amount']));
+				}
+				MyDbFreeResult($MyDbResult);
+			}
+		}
+	?>
+	
+	<div class="container-fluid" style='margin-top:10px;margin-bottom:10px;'>
+		<div class="row">
+			<div class="col-lg-4 col-md-4 col-sm-4 col-xs-4 text-right">
+				<label class="MyLabelText">Expense Type</label>
+			</div>
+			
+			<div class="col-lg-4 col-md-4 col-sm-4 col-xs-4">
+				<? GVComboBox("INPUT","cboExpenseType","cboExpenseType",$expenseArr,"","width:150px;margin-left: 5px;",""); ?> 
+			</div>
+		</div>
+		
+		<div class="row">
+			<div class="col-lg-4 col-md-4 col-sm-4 col-xs-4 text-right">
+				<label class="MyLabelText">Expense Date</label>
+			</div>
+			
+			<div class="col-lg-4 col-md-4 col-sm-4 col-xs-4">
+				<? GVDateBox("INPUT","txtExpenseDate","txtExpenseDate","","","maxlength='10'");  ?>
+			</div>
+		</div>
+		
+		<div class="row">
+			<div class="col-lg-4 col-md-4 col-sm-4 col-xs-4 text-right">
+				<label class="MyLabelText">Payment Type</label>
+			</div>
+			
+			<div class="col-lg-4 col-md-4 col-sm-4 col-xs-4">
+				<? GVComboBox("INPUT","cboPayType","cboPayType",$payTypeArr,"","width:150px;margin-left: 5px;","onchange='cboPayType_onchanged();'"); ?> 
+			</div>
+		</div>
+		
+		<div class="row">
+			<div class="col-lg-4 col-md-4 col-sm-4 col-xs-4 text-right">
+				<label class="MyLabelText">Expense Amount</label>
+			</div>
+			
+			<div class="col-lg-4 col-md-4 col-sm-4 col-xs-4">
+				<? GVAmountBox("INPUT","txtExpenseAmt","txtExpenseAmt","","","placeholder='Expense Amount'"); ?> 
+			</div>
+		</div>
+		
+		<div class="row">
+			<div class="col-lg-4 col-md-4 col-sm-4 col-xs-4 text-right">
+				<label class="MyLabelText">Expense Remarks</label>
+			</div>
+			
+			<div class="col-lg-6 col-md-6 col-sm-6 col-xs-6">
+				<? GVTextArea("INPUT","txtRemarks","txtRemarks","","","maxlength='100' placeholder='Expense Remarks'"); ?> 
+			</div>
+		</div>
+	</div>
+	
+	<? 
+		$GVBackBtnInd = 1;
+		$GVBackBtnVal = "CANCEL";
+		$GVsaveBtnInd = 1;
+		$GVSaveBtnVal = "SAVE";
+		include("gv_popup_footer.html"); 
+	?>
+	
+	<script type='text/javascript'>
+	$('#txtExpenseDate').daterangepicker({ "singleDatePicker": true, locale: { format: 'DD-MM-YYYY' }});
+	
+	</script>

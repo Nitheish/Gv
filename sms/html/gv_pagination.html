@@ -1,0 +1,66 @@
+<?
+$totalNumPages = ceil(GV_Divide($totNumRecord,$numRecordPerPage));
+
+$endRecord = $startRecord + $numRecordPerPage;
+
+if($totalNumPages > 1)
+{
+	if($totalNumPages <= 9)
+		$pageStart = 1;
+	else
+	{
+		if($currentPage <= 5)
+			$pageStart = 1;
+		else
+		{
+			$pageStart = $currentPage - 4;
+			
+			if(($currentPage + 4) > $totalNumPages)
+				$pageStart = $totalNumPages - 8;
+		}
+	}
+	?>
+	
+	<div class="row" style='padding-top:2px;'>
+	 	<div class="col-lg-10 col-md-10 col-sm-10 col-xs-10">
+			<ul class="pagination">
+				<li <? if($currentPage == 1) { ?> class="prev" <? } ?>><a <? if($currentPage > 1) { ?> onclick='GVpagiationClick(1);' <? } ?>>First</a></li>
+				<li <? if($currentPage == 1) { ?> class="prev" <? } ?>><a <? if($currentPage > 1) { ?> onclick='GVpagiationClick(<?echo $currentPage - 1; ?>);' <? } ?>>Prev</a></li>
+				
+				<? for($incrPage = $pageStart; ($incrPage <= $totalNumPages) && ($incrPage <= $pageStart + 8); $incrPage++) { ?>
+					<li <? if($incrPage == $currentPage) { ?> class="currentpage" <? } ?>><a href="javascript:void(0);" onclick='GVpagiationClick(<?echo $incrPage; ?>);'><? echo $incrPage; ?></a></li>
+				<? } ?>
+				
+				<li <? if($currentPage == $totalNumPages) { ?> class="next" <? } ?>><a <? if($currentPage < $totalNumPages) { ?> onclick='GVpagiationClick(<?echo $currentPage + 1; ?>);' <? } ?>>Next</a></li>
+				<li <? if($currentPage == $totalNumPages) { ?> class="next" <? } ?>><a <? if($currentPage < $totalNumPages) { ?> onclick='GVpagiationClick(<?echo $totalNumPages; ?>);' <? } ?>>Last</a></li>
+			</ul>
+		</div>
+		
+		<div class="col-lg-2 col-md-2 col-sm-2 col-xs-2 text-center">
+			<div class='pagesShow'>
+			<? 
+			if($totNumRecord > 0)
+			{
+				echo "Records ".($startRecord + 1)." - ";
+				
+				if($endRecord > $totNumRecord)
+					echo $totNumRecord;
+				else
+					echo $endRecord;
+					
+				echo " of ".$totNumRecord;
+			} 
+			?>
+			</div>
+		</div>
+	</div>
+	
+	<script type='text/javascript'>
+		function GVpagiationClick(currentPage)
+		{
+			document.getElementById("currentPage").value = currentPage;
+			GVcallLoader();
+			GVformPost();
+		}
+	</script>
+<? } ?>

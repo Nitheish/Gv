@@ -1,0 +1,70 @@
+<?
+    $GVpageTitle = "DEPARTMENT INFORMATION";
+    include("gv_popup_header.html");
+
+    if($ErrorInd == 0)
+    {
+        $txtDepartmentCode = "";
+        $txtDepartmentName = "";
+        $txtDescription = "";
+
+        if($GVSTEP == "EDIT")
+        {
+            $MySelectQry = "select * from department_info where";
+            $MySelectQry .= " company_id=?"; MYSQL_BuildArray("company_id",$company_id,"s");
+            $MySelectQry .= " and department_id=?"; MYSQL_BuildArray("department_id",$GVID,"s");
+            $MyDbResult = MyDbQuery($MySelectQry,$_GVParamArray);    
+            if($MyRowData = mysqli_fetch_array($MyDbResult, MYSQLI_ASSOC)) 
+            {
+                $txtDepartmentCode = GVStringFormat($MyRowData['department_code']);
+                $txtDepartmentName = GVStringFormat($MyRowData['department_name']);
+                $txtDescription    = GVStringFormat($MyRowData['description']);
+            }
+            MyDbFreeResult($MyDbResult);
+        }
+    }
+?>
+
+<div class="container-fluid" style='margin-top:10px;margin-bottom:10px;'>
+
+    <div class="row">
+        <div class="col-lg-4 col-md-4 col-sm-4 col-xs-4 text-right">
+            <label class="MyLabelText">Department Name</label>
+        </div>
+        <div class="col-lg-6 col-md-6 col-sm-6 col-xs-6">
+            <? GVTextBox("INPUT","txtDepartmentName","txtDepartmentName",$txtDepartmentName,"","maxlength='50' placeholder='Department Name'"); ?> 
+        </div>
+    </div>
+
+    <? if($GVSTEP == "EDIT") { ?>
+    <div class="row" style='padding-top: 5px;'>
+        <div class="col-lg-4 col-md-4 col-sm-4 col-xs-4 text-right">
+            <label class="MyLabelText">Department Code</label>
+        </div>
+        <div class="col-lg-6 col-md-6 col-sm-6 col-xs-6">
+            <? 
+                GVTextBox("INPUT","txtDepartmentCode","txtDepartmentCode",$txtDepartmentCode,"","disabled placeholder='Department Code'"); 
+                GVHiddenInput("txtDepartmentCode","txtDepartmentCode",$txtDepartmentCode);
+            ?> 
+        </div>
+    </div>
+   
+    <? } ?>
+
+    <div class="row" style='padding-top: 5px;'>
+        <div class="col-lg-4 col-md-4 col-sm-4 col-xs-4 text-right">
+            <label class="MyLabelText">Description</label>
+        </div>
+        <div class="col-lg-6 col-md-6 col-sm-6 col-xs-6">
+            <? GVTextArea("INPUT","txtDescription","txtDescription",$txtDescription,"","maxlength='200' placeholder='Department Description'",""); ?> 
+        </div>
+    </div>
+</div>
+
+<? 
+    $GVBackBtnInd = 1;
+    $GVBackBtnVal = "CANCEL";
+    $GVsaveBtnInd = 1;
+    $GVSaveBtnVal = "SAVE";
+    include("gv_popup_footer.html"); 
+?>

@@ -1,0 +1,476 @@
+	<? 
+		include("page_header.html");
+		include("../info/gv_sales_info.php"); 
+		
+		if($ErrorInd == 0)
+		{
+			$cboCustomer = 0;
+			$txtSalesDate = GVGetCurrentDate();
+			$rdoSalesTypeInd = 0;
+			$txtRemarks = "";
+			$txtSalesCode = "";
+			$txtPaidAmt = "0.00";
+			$txtBalanceAmt = "0.00";
+			$rdoDiscountInd = "0";
+			$txtPercent = "0.00";
+			$txtDiscountAmount = "0.00";
+			$txtTransportAmount = "0.00";
+			$txtTotalAmount = "0.00";
+			$txtTotalQty = "0";
+			$txtOverallAmount = "0.00";
+			$txtPayAmt = "0.00";
+			$status	= "";
+			
+			if($GVSTEP == "EDIT")
+			{
+				$MySelectQry = "select * from sales_info where";
+				$MySelectQry .= " company_id=?";MYSQL_BuildArray("company_id",$company_id,"s");
+				$MySelectQry .= " and sales_id=?";MYSQL_BuildArray("sales_id",$GVID,"s");
+				$MyDbResult =  MyDbQuery($MySelectQry,$_GVParamArray);	
+				if($MyRowData = mysqli_fetch_array($MyDbResult, MYSQLI_ASSOC)) 
+				{
+					$txtSalesCode = GVStringFormat($MyRowData['sales_code']);
+					$cboCustomer = GVStringFormat($MyRowData['customer_id']);
+					$txtSalesDate = GVGetUserDateformat(GVStringFormat($MyRowData['sales_date']));
+					$rdoSalesTypeInd = GVStringFormat($MyRowData['sales_type']);
+					$txtRemarks = GVStringFormat($MyRowData['remarks']);
+					$txtTotalQty = GVStringFormat($MyRowData['tot_qty']);
+					$status = GVStringFormat($MyRowData['status']);
+					$rdoDiscountInd = GVStringFormat($MyRowData['discount_type']);
+					
+					$txtPaidAmt = GVformatAmount(GVStringFormat($MyRowData['paid_amt']));
+					$txtBalanceAmt = GVformatAmount(GVStringFormat($MyRowData['balance_due']));
+					$txtPercent = GVformatAmount(GVStringFormat($MyRowData['discount_percent']));
+					$txtDiscountAmount = GVformatAmount(GVStringFormat($MyRowData['discount_amount']));
+					$txtTransportAmount = GVformatAmount(GVStringFormat($MyRowData['ship_hand_amt']));
+					$txtTotalAmount = GVformatAmount(GVStringFormat($MyRowData['tot_amount']));
+					$txtOverallAmount = GVformatAmount(GVStringFormat($MyRowData['overall_amount']));
+				}
+				MyDbFreeResult($MyDbResult);
+				
+				if($status == "PAID")
+					$status = "<span class='badge badge-success' style='font-size:10px;padding:7px;'>Paid</span>";
+				else if($status == "PARTIAL PAID")
+					$status = "<span class='badge badge-warning' style='font-size:10px;padding:7px;'>Partial Paid</span>";
+				else if($status == "OVERPAID")
+					$status = "<span class='badge badge-danger' style='font-size:10px;padding:7px;'>Over Paid</span>";
+				else
+					$status = "<span class='badge badge-danger' style='font-size:10px;padding:7px;'>Not Paid</span>";
+			}
+		}
+	?>
+	<style>
+	.form-group {
+	    margin-bottom: 0px;
+	}
+	</style>
+	<div class="container-fluid">
+		<div class="row" style='padding: 12px 7px 0px 0px;'>
+			<div class="col-lg-8 col-md-8 col-sm-8 col-xs-8">
+				<label class="MyTextHeading"><i class='fa fa-shopping-cart'></i><span>Sales Information</span></label>
+			</div>
+			
+			<div class="col-lg-2 col-md-2 col-sm-2 col-xs-2 text-right">
+				<?if($GVSTEP == "EDIT") { ?>
+				<span class='badge badge-secondary' style='font-size:12px;padding:10px;'>Sales No : &nbsp;<? echo $txtSalesCode; ?></span>
+				<? } ?>
+			</div>
+			
+			<div class="col-lg-2 col-md-2 col-sm-2 col-xs-2 text-right">
+				<? $GVBackSummaryLink = GVstringEncrption("LoadHtmlPage=gv_sales_list&GVmenu=$GVmenu"); ?>
+				<span class="badge badge-secondary" style='padding:8px;cursor:pointer;' onclick="GVcallLoader();setGVPageSession('<? echo $GVBackSummaryLink;?>','<? echo $GV_PageSSDATA; ?>',1);" title="Back to Sales List"><i class='fa fa-mail-reply' style='font-size:14px;'></i></span>
+			</div>
+		</div>
+		
+		<div class="row" style='margin-top:7px;margin-bottom:7px;'>
+			<div class="col-lg-1 col-md-1 col-sm-1 col-xs-1">
+				<label class='MyLabelText text-right'>Customer</label>
+			</div>
+			
+			<div class="col-lg-3 col-md-3 col-sm-3 col-xs-3">
+				<label class="MyLabelText" style="text-align:left;color:#000;font-weight: normal;"><? echo $customerArr[$cboCustomer]; ?></label>
+			</div>
+			
+			<div class="col-lg-1 col-md-1 col-sm-1 col-xs-1">
+				<label class='MyLabelText text-right'>Date</label>
+			</div>
+			
+			<div class="col-lg-2 col-md-2 col-sm-2 col-xs-2">
+				<label class="MyLabelText" style="text-align:left;color:#000;font-weight: normal;"><? echo $txtSalesDate; ?></label>
+			</div>
+			
+			<div class="col-lg-1 col-md-1 col-sm-1 col-xs-1">
+				<label class='MyLabelText text-right'>Bill Type</label>
+			</div>
+			
+			<div class="col-lg-2 col-md-2 col-sm-2 col-xs-2" >
+				<label class="MyLabelText" style="text-align:left;color:#000;font-weight: normal;">
+				<?
+					if($rdoSalesTypeInd == 1)
+						echo "Credit"; 
+					else
+						echo "Cash";
+				?>
+				</label>
+			</div>
+			
+			<div class="col-lg-2 col-md-2 col-sm-2 col-xs-2" >
+			<div class="row">
+				<div class="col-lg-4 col-md-4 col-sm-4 col-xs-4 text-right">
+					<label class="MyLabelText">Status</label>
+				</div>
+				
+				<div class="col-lg-8 col-md-8 col-sm-8 col-xs-8">
+					<? echo $status; ?>
+				</div>
+			</div>
+			</div>
+		</div>
+		
+		<div id='mainTableID' class="table-responsive GVtableHeadDIV" style='border:1px solid #CCC;overflow-y:auto;width:60%;display:inline-block;'>          
+			<table id='itemTable' class="table table-hover GVtableHeadFixed" style='width:100%;margin-top:0px !important;'>
+				<thead>
+					<tr>
+						<th width='20%' class='GVtableHead text-left'>Product Code</th>
+						<th width='30%' class='GVtableHead text-left'>Product Name</th>
+						<th width='15%' class='GVtableHead text-right'>Quantity</th>
+						<th width='15%' class='GVtableHead text-right'>Rate&nbsp;(&nbsp;<i class='fa fa-rupee'></i>&nbsp;)</th>
+						<th width='15%' class='GVtableHead text-right'>Amount&nbsp;(&nbsp;<i class='fa fa-rupee'></i>&nbsp;)</th>
+						<th width='5%' class='GVtableHead text-center'>&nbsp</th>
+					</tr>
+				</thead>
+				
+				<tbody id='itemDIV'>
+					<?
+						if($GVSTEP == "EDIT")
+						{
+							$rowCount = 1;
+							
+							$MySelectQry = "select * from sales_product where";
+							$MySelectQry .= " company_id=?";MYSQL_BuildArray("company_id",$company_id,"s");
+							$MySelectQry .= " and sales_id=?";MYSQL_BuildArray("sales_id",$GVID,"s");
+							$MyDbResult =  MyDbQuery($MySelectQry,$_GVParamArray);	
+							while($MyRowData = mysqli_fetch_array($MyDbResult, MYSQLI_ASSOC)) 
+							{
+								$product_id = GVStringFormat($MyRowData['product_id']);
+								$product_quantity = GVStringFormat($MyRowData['product_quantity']);
+								$product_price = GVformatAmount(GVStringFormat($MyRowData['product_price']));
+								$product_tot_amount = GVformatAmount(GVStringFormat($MyRowData['product_tot_amount']));
+							
+								$tableRowID = "itemRec".$rowCount;
+								$txtProductCode = "txtProductCode".$rowCount;
+								$cboProductName = "cboProductName".$rowCount;
+								$txtQuantity = "txtQuantity".$rowCount;
+								$txtRate = "txtRate".$rowCount;
+								$txtAmount = "txtAmount".$rowCount;
+								
+								${$txtProductCode} = "PT".$product_id;
+								${$cboProductName} = $product_id;
+								${$txtQuantity} = $product_quantity;
+								${$txtRate} = $product_price;
+								${$txtAmount} = $product_tot_amount;
+					
+								echo "<tr id='$tableRowID' style='line-height: 1.5;'>";
+									echo "<td class='GVtableData'>";
+									echo ${$txtProductCode};
+									echo "</td>";
+									
+									echo "<td class='GVtableData'>";
+									echo $ProductArr[${$cboProductName}];
+									echo "</td>";
+									
+									echo "<td class='GVtableData text-right'>";
+									echo ${$txtQuantity};
+									echo "</td>";
+									
+									echo "<td class='GVtableData text-right'>";
+									echo GVCurrecyFormat(${$txtRate}, 1);
+									echo "</td>";
+									
+									echo "<td class='GVtableData text-right'>";
+									echo GVCurrecyFormat(${$txtAmount}, 1);
+									echo "</td>";
+									
+									echo "<td class='GVtableData'>";
+									echo "</td>";
+								echo "</tr>";
+								
+								$rowCount++;
+							}
+							MyDbFreeResult($MyDbResult);
+						}
+					?>
+				</tbody>
+			</table>
+		</div>
+		
+		<div id='mainTableID1' class="table-responsive GVtableHeadDIV" style='display:inline-block;border:1px solid #CCC;overflow-y:auto;width:38%;'>          
+			<table id='itemTable' class="table table-hover GVtableHeadFixed" style='width:100%;margin-top:0px !important;'>
+				<thead>
+					<tr>
+						<th width='5%' class='GVtableHead text-left'>S.No</th>
+						<th width='20%' class='GVtableHead text-left'>Date</th>
+						<th width='25%' class='GVtableHead text-left'>Payment Type</th>
+						<th width='20%' class='GVtableHead text-right'>Amount&nbsp;(&nbsp;<i class='fa fa-rupee'></i>&nbsp;)</th>
+						<th width='25%' class='GVtableHead text-center'>
+						<?
+							$AddURL = GVstringEncrption("LoadHtmlPage=gv_sales_pay&GVmenu=$GVmenu&GVSTEP=ADD&GVID=$GVID");
+							GVimageButton("PAYMENT","GVPayBtn","GVPayBtn",GVimage("image","image","/gvtech/images/Money.png","","","width='20'"),"button","SUCCESS","float: right;margin-left: auto;height:27px;font-size:11px;","onclick='setGVPopupSession(\"$AddURL\",\"$GV_PopupSSDATA\",700,400);'");  
+						?>
+						</th>
+					</tr>
+				</thead>
+				
+				<tbody id='paymentDIV'>
+					<?
+						$payTypeArr = array();
+						$payTypeArr["CASH"] = "Cash";
+						$payTypeArr["UPI"] = "Gpay / Phone Pe / Paytm";
+						$payTypeArr["NETBANKING"] = "Net Banking";
+		
+						if($GVSTEP == "EDIT")
+						{
+							$rowCount = 1;
+							
+							$MySelectQry = "select * from payment_info where";
+							$MySelectQry .= " company_id=?";MYSQL_BuildArray("company_id",$company_id,"s");
+							$MySelectQry .= " and sales_id=?";MYSQL_BuildArray("sales_id",$GVID,"s");
+							$MyDbResult =  MyDbQuery($MySelectQry,$_GVParamArray);	
+							while($MyRowData = mysqli_fetch_array($MyDbResult, MYSQLI_ASSOC)) 
+							{
+								$payment_info_id = GVStringFormat($MyRowData['payment_info_id']);
+								$pay_date = GVGetUserDateformat(GVStringFormat($MyRowData['pay_date']));
+								$payment_type = GVStringFormat($MyRowData['payment_type']);
+								$pay_amount = GVformatAmount(GVStringFormat($MyRowData['pay_amount']));
+								
+								$gvCustomDesc = "$txtSalesCode Payment";
+								$editLink = GVstringEncrption("LoadHtmlPage=gv_sales_pay&GVmenu=$GVmenu&GVsubMenu=$GVsubMenu&GVSTEP=EDIT&GVID=$GVID&GVID1=$payment_info_id");
+								$DelLink = GVstringEncrption("LoadHtmlPage=gv_sales_pay_del&GVSTEP=DELETE&GVID=$GVID&GVID1=$payment_info_id&gvCustomDesc=$gvCustomDesc");
+						
+								echo "<tr id='$tableRowID' style='line-height: 1.5;'>";
+									echo "<td class='GVtableData'>";
+									echo $rowCount;
+									echo "</td>";
+									
+									echo "<td class='GVtableData'>";
+									echo $pay_date;
+									echo "</td>";
+									
+									echo "<td class='GVtableData'>";
+									echo $payTypeArr[$payment_type];
+									echo "</td>";
+									
+									echo "<td class='GVtableData text-right'>";
+									echo GVCurrecyFormat($pay_amount,1);
+									echo "</td>";
+									
+									echo "<td class='GVtableData text-center'>";
+									echo GVimage("GVedit","GVedit","/gvtech/images/edit.png","","cursor:pointer;","width='15' title='Edit' onclick='GVpopupCall(\"$editLink\",\"$GV_PopupSSDATA\",700,400);'");
+									echo GVimage("GVdel","GVdel","/gvtech/images/delete.png","","margin-left:7px;cursor:pointer;","width='15' title='Delete' onclick=GVpopupCall('$DelLink','$GV_PopupSSDATA',400,150);");
+									echo "</td>";
+								echo "</tr>";
+								
+								$rowCount++;
+							}
+							MyDbFreeResult($MyDbResult);
+						}
+					?>
+				</tbody>
+			</table>
+		</div>
+		
+		<div class="row" style='margin-top:7px;'>
+			<div class="col-lg-4 col-md-4 col-sm-4 col-xs-4">
+				<div class="row">
+					<div class="col-lg-6 col-md-6 col-sm-6 col-xs-6 text-right">
+						<label class="MyLabelText">Discount Type</label>
+					</div>
+					
+					<div class="col-lg-6 col-md-6 col-sm-6 col-xs-6">
+						<label class="MyLabelText" style="text-align:left;color:#000;font-weight: normal;">
+						<?
+							if($rdoDiscountInd == 1)
+								echo "Percentage";
+							else
+								echo "Amount";
+						?>
+						</label>
+					</div>
+				</div>
+				
+				<div id='DiscountPecentageID' class="row" style='margin-top:5px;display:none;'>
+					<div class="col-lg-6 col-md-6 col-sm-6 col-xs-6 text-right">
+						<label class="MyLabelText">Percentage</label>
+					</div>
+					
+					<div class="col-lg-6 col-md-6 col-sm-6 col-xs-6">
+						<label class="MyLabelText" style="text-align:left;color:#000;font-weight: normal;"><? echo $txtPercent;?>&nbsp;%</label>
+					</div>
+				</div>
+				
+				<div class="row" style='margin-top:5px;'>
+					<div class="col-lg-6 col-md-6 col-sm-6 col-xs-6 text-right">
+						<label class="MyLabelText">Discount Amount</label>
+					</div>
+					
+					<div class="col-lg-6 col-md-6 col-sm-6 col-xs-6">
+						<label class="MyLabelText" style="text-align:left;color:#000;font-weight: normal;">
+						<? echo GVCurrecyFormat($txtDiscountAmount);?>
+						</label>
+					</div>
+				</div>
+				
+				<div class="row" style='margin-top:5px;'>
+					<div class="col-lg-6 col-md-6 col-sm-6 col-xs-6 text-right">
+						<label class="MyLabelText">Trasport wages</label>
+					</div>
+					
+					<div class="col-lg-6 col-md-6 col-sm-6 col-xs-6">
+						<label class="MyLabelText" style="text-align:left;color:#000;font-weight: normal;">
+						<? echo GVCurrecyFormat($txtTransportAmount);?>
+						</label>
+					</div>
+				</div>
+			</div>
+			
+			<div class="col-lg-4 col-md-4 col-sm-4 col-xs-4">
+				<div class="row" style='margin-top:5px;'>
+					<div class="col-lg-6 col-md-6 col-sm-6 col-xs-6 text-right">
+						<label class="MyLabelText">Total Amount</label>
+					</div>
+					
+					<div class="col-lg-6 col-md-6 col-sm-6 col-xs-6">
+						<label class="MyLabelText" style="text-align:left;color:#000;font-weight: normal;">
+						<? echo GVCurrecyFormat($txtTotalAmount); ?>
+						</label>
+					</div>
+				</div>
+				
+				<div class="row" style='margin-top:5px;'>
+					<div class="col-lg-6 col-md-6 col-sm-6 col-xs-6 text-right">
+						<label class="MyLabelText">Total Quantity</label>
+					</div>
+					
+					<div class="col-lg-6 col-md-6 col-sm-6 col-xs-6">
+						<label class="MyLabelText" style="text-align:left;color:#000;font-weight: normal;"><? echo $txtTotalQty;?></label>
+					</div>
+				</div>
+				
+				<div class="row" style='margin-top:5px;'>
+					<div class="col-lg-6 col-md-6 col-sm-6 col-xs-6 text-right">
+						<label class="MyLabelText">Overall Amount</label>
+					</div>
+					
+					<div class="col-lg-6 col-md-6 col-sm-6 col-xs-6">
+						<label class="MyLabelText" style="text-align:left;color:#000;font-weight: normal;">
+						<? echo GVCurrecyFormat($txtOverallAmount); ?>
+						</label>
+					</div>
+				</div>
+			</div>
+			
+			<div class="col-lg-4 col-md-4 col-sm-4 col-xs-4">
+				<div class="row">
+					<div class="col-lg-6 col-md-6 col-sm-6 col-xs-6 text-right">
+						<label class="MyLabelText">Remarks</label>
+					</div>
+					
+					<div class="col-lg-6 col-md-6 col-sm-6 col-xs-6">
+						<label class="MyLabelText" style="text-align:left;color:#000;font-weight: normal;">
+						<?
+							if($txtRemarks != "")
+								echo $txtRemarks;
+							else
+								echo "None";
+						?>
+						</label>
+					</div>
+				</div>
+				
+				<?if($GVSTEP == "EDIT") { ?>
+				<div class="row" style='margin-top:5px;'>
+					<div class="col-lg-6 col-md-6 col-sm-6 col-xs-6 text-right">
+						<label class="MyLabelText">Paid Amount</label>
+					</div>
+					
+					<div class="col-lg-6 col-md-6 col-sm-6 col-xs-6">
+						<label class="MyLabelText" style="text-align:left;color:#23903c;font-weight: 700;">
+						<? echo GVCurrecyFormat($txtPaidAmt);?>
+						</label>
+					</div>
+				</div>
+				
+				<div class="row" style='margin-top:5px;'>
+					<div class="col-lg-6 col-md-6 col-sm-6 col-xs-6 text-right">
+						<label class="MyLabelText">Balance Amount</label>
+					</div>
+					
+					<div class="col-lg-6 col-md-6 col-sm-6 col-xs-6">
+						<label class="MyLabelText" style="text-align:left;color:#dc3545;font-weight: 700;">
+						<? echo GVCurrecyFormat($txtBalanceAmt);?>
+						</label>
+					</div>
+				</div>
+				<? } ?>
+			</div>
+		</div>
+		
+		<footer class="page-footer">
+		<div class="container">
+			<div class="row" style='padding-top:10px;'>
+				<div class="col-lg-6 col-md-6 col-sm-6 col-xs-6 text-left">
+					
+				</div>
+				
+				<div class="col-lg-6 col-md-6 col-sm-6 col-xs-6 text-right">
+					<?
+						$pdfLink = "../backend/gv_page_redirect.php?SkipSSDataInd=1".GVqueryString("LoadHtmlPage=gv_sales_info_export&GVmenu=$GVmenu&cboSearchOpt=$cboSearchOpt&txtSearchStr=$txtSearchStr&GVorderBy=$GVorderBy&cboStatus=$cboStatus&txtRangeDate=$txtRangeDate");
+						GVimageButton("PRINT","GVPrintBtn","GVPrintBtn",GVimage("image","image","/gvtech/images/printer.png","","","width='20'"),"button","THEME","","");  
+						
+						echo "&nbsp;&nbsp;";
+						$editLink = GVstringEncrption("LoadHtmlPage=gv_sales_info&GVmenu=$GVmenu&GVsubMenu=$GVsubMenu&GVSTEP=EDIT&GVID=$GVID");
+						GVimageButton("EDIT","GVEditBtn","GVEditBtn",GVimage("image","image","/gvtech/images/edit.png","","","width='20'"),"button","SECONDARY","","onclick=GVcallLoader();setGVPageSession('$editLink','$GV_PageSSDATA',1);");  
+					?>
+				</div>
+			</div>
+		</div>
+		</footer>
+		</div>
+	
+	<? 
+		$GVBackBtnInd = 0;
+		$GVsaveBtnInd = 0;
+		include("page_footer.html"); 
+	?>
+
+<script type='text/javascript'>
+	var windowHeight = window.innerHeight * 0.55;
+	if(document.getElementById("mainTableID"))
+	{
+		document.getElementById("mainTableID").style.maxHeight = windowHeight;
+		document.getElementById("mainTableID").style.minHeight = windowHeight;
+	}
+	
+	if(document.getElementById("mainTableID1"))
+	{
+		document.getElementById("mainTableID1").style.maxHeight = windowHeight;
+		document.getElementById("mainTableID1").style.minHeight = windowHeight;
+	}
+	
+	var _rdoDiscountInd = '<? echo $rdoDiscountInd; ?>';
+	
+	function rdoDiscountInd_onclick()
+	{
+		if(_rdoDiscountInd == 1)
+		{
+			$("#DiscountPecentageID").show();
+		}
+		else
+		{
+			$("#DiscountPecentageID").hide();
+		}
+	}
+	
+	rdoDiscountInd_onclick();
+</script>
+	

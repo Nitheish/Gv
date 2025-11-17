@@ -1,0 +1,360 @@
+	<? 
+	include("page_header.html");
+	include("../info/gv_dashboard_info.php"); 
+	?>
+	<div class="container-fluid">
+		<div class="row" style='padding:12px 7px 0px 0px;'>
+			<div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
+				<label class="MyTextHeading"><i class='fa fa-dashboard'></i><span>Dashboard</span></label>
+			</div>
+		</div>
+		
+		<div class="row">
+			<div class="col-lg-3 col-md-3 col-sm-3 col-xs-3">
+				<div class="card" style='border:1px solid #28a745;'>
+					<div class="card-body bg-success" style='color: #fff;'>
+						<div class="row">
+							<div class="col-3">
+								<i class="fa fa-group fa-3x"></i>
+							</div>
+							
+							<div class="col-9 text-right" >
+								<div style='font-size:20px;font-weight:700;'><? echo $totCustomer; ?></div>
+								<div style='font-size:12px;font-weight:700;'>Customers</div>
+							</div>
+						</div>
+					</div> 
+				   
+					<div onclick="setGVPageSession('<? echo $CustomerURL; ?>','<? echo $GV_PageSSDATA; ?>');GVcallLoader();" class="card-footer" style='cursor:pointer;background-color: #fff;color:#28a745;font-weight:700;' title='View Details'>
+						<span class="float-sm-left">View Details</span>
+						<span class="float-sm-right"><i class="fa fa-arrow-circle-right"></i></span>
+					</div>
+				</div>
+			</div>
+			
+			<div class="col-lg-3 col-md-3 col-sm-3 col-xs-3">
+				<div class="card" style='border:1px solid #17a2b8;'>
+					<div class="card-body bg-info" style='color: #fff;'>
+						<div class="row">
+							<div class="col-3">
+								<i class="fa fa-handshake-o fa-3x"></i>
+							</div>
+							
+							<div class="col-9 text-right" >
+								<div style='font-size:20px;font-weight:700;'><? echo $totVendor; ?></div>
+								<div style='font-size:12px;font-weight:700;'>Vendors</div>
+							</div>
+						</div>
+					</div> 
+				   
+					<div onclick="setGVPageSession('<? echo $vendorURL; ?>','<? echo $GV_PageSSDATA; ?>');GVcallLoader();" class="card-footer" style='cursor:pointer;background-color: #fff;color:#17a2b8;font-weight:700;' title='View Details'>
+						<span class="float-sm-left">View Details</span>
+						<span class="float-sm-right"><i class="fa fa-arrow-circle-right"></i></span>
+					</div>
+				</div>
+			</div>
+			
+			<div class="col-lg-3 col-md-3 col-sm-3 col-xs-3">
+				<div class="card" style='border:1px solid #6c757d;'>
+					<div class="card-body bg-secondary" style='color: #fff;'>
+						<div class="row">
+							<div class="col-3">
+								<i class="fa fa-shopping-cart fa-3x"></i>
+							</div>
+							
+							<div class="col-9 text-right" >
+								<div style='font-size:20px;font-weight:700;'><? echo $totSales; ?></div>
+								<div style='font-size:12px;font-weight:700;'>Sales</div>
+							</div>
+						</div>
+					</div> 
+				   
+					<div onclick="setGVPageSession('<? echo $salesURL; ?>','<? echo $GV_PageSSDATA; ?>');GVcallLoader();" class="card-footer" style='cursor:pointer;background-color: #fff;color:#6c757d;font-weight:700;' title='View Details'>
+						<span class="float-sm-left">View Details</span>
+						<span class="float-sm-right"><i class="fa fa-arrow-circle-right"></i></span>
+					</div>
+				</div>
+			</div>
+			
+			<div class="col-lg-3 col-md-3 col-sm-3 col-xs-3">
+				<div class="card" style='border:1px solid #dc3545;'>
+					<div class="card-body bg-danger" style='color: #fff;'>
+						<div class="row">
+							<div class="col-3">
+								<i class="fa fa-cart-arrow-down fa-3x"></i>
+							</div>
+							
+							<div class="col-9 text-right" >
+								<div style='font-size:20px;font-weight:700;'><? echo $totPurchase; ?></div>
+								<div style='font-size:12px;font-weight:700;'>Purchases</div>
+							</div>
+						</div>
+					</div> 
+				   
+					<div onclick="setGVPageSession('<? echo $purchaseURL; ?>','<? echo $GV_PageSSDATA; ?>');GVcallLoader();" class="card-footer" style='cursor:pointer;background-color: #fff;color:#dc3545;font-weight:700;' title='View Details'>
+						<span class="float-sm-left">View Details</span>
+						<span class="float-sm-right"><i class="fa fa-arrow-circle-right"></i></span>
+					</div>
+				</div>
+			</div>
+		</div>
+		
+		<div class="row" style='padding-top:10px;'>
+			<div class="col-lg-6 col-md-6 col-sm-6 col-xs-6">
+				<div class="card">
+					<div class="card-header" style='background-color: #E7E9EB;'><label class='MyLabelText' style='margin:0px;padding:0px;'>Alert</label></div>
+					<div class="card-body" id='AlertDIV' style='overflow-y:auto;width:100%;'>
+						<?
+							echo "<ul class='GVListingType'>";
+							$MySelectQry = "select product_id,product_name,product_code,remaining_qty from product_info where";
+							$MySelectQry .= " company_id=?";MYSQL_BuildArray("company_id",$company_id,"s");
+							$MySelectQry .= " and delete_ind=?";MYSQL_BuildArray("delete_ind",'0',"s");
+							$MySelectQry .= " and alert_ind=?";MYSQL_BuildArray("alert_ind",'1',"s");
+							$MySelectQry .= " and remaining_qty<=qty_count_alert";
+							$MyDbResult =  MyDbQuery($MySelectQry,$_GVParamArray);	
+							while($MyRowData = mysqli_fetch_array($MyDbResult, MYSQLI_ASSOC)) 
+							{
+								$product_id = GVStringFormat($MyRowData['product_id']);
+								$product_name = GVStringFormat($MyRowData['product_name']);
+								$product_code = GVStringFormat($MyRowData['product_code']);
+								$remaining_qty_alert = GVStringFormat($MyRowData['remaining_qty']);
+								
+								if($remaining_qty_alert == 0)
+									echo "<li><span class='badge badge-danger' style='margin-left:5px;font-size:11px;padding:5px;'>Out of stock</span><label class='MyLabelText' style='display: inline-block;'> <span style='color:#00ABFF;'>$product_name ( $product_code )</span> product</label></li>";
+								else
+									echo "<li><span class='badge badge-warning' style='margin-left:5px;font-size:11px;padding:5px;'>Low stock</span> <label class='MyLabelText' style='display: inline-block;'> <span style='color:#00ABFF;'>$product_name ( $product_code )</span> product remaining <span style='color:#00ABFF;'>$remaining_qty_alert</span> quantity only available</label></li>";
+							}
+							MyDbFreeResult($MyDbResult);
+							echo "</ul>";
+						?>
+					</div>
+				</div>
+			</div>
+			
+			<div class="col-lg-3 col-md-3 col-sm-3 col-xs-3">
+				<div class="card">
+					<div class="card-header" style='background-color: #E7E9EB;'><label class='MyLabelText' style='margin:0px;padding:0px;'>Overall Account Summary</label></div>
+					<div class="card-body" id='AccountDIV' style='overflow-y:auto;width:100%;'>
+						<div class="row">
+							<div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
+								<label class="MyLabelText">Initial Stock Amount</label>
+							</div>
+							
+							<div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
+								<label class="MyLabelText" style="color:#000;font-weight: normal;">
+								<? echo GVCurrecyFormat($initialStockAmount);?>
+								</label>
+							</div>
+						</div>
+						
+						<div class="row">
+							<div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
+								<label class="MyLabelText">Total Purchased Amount</label>
+							</div>
+							
+							<div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
+								<label class="MyLabelText" style="color:#000;font-weight: normal;">
+								<? echo GVCurrecyFormat($overallPurchasedAmt);?>
+								</label>
+							</div>
+						</div>
+						
+						<div class="row">
+							<div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
+								<label class="MyLabelText">Total Sales Amount</label>
+							</div>
+							
+							<div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
+								<label class="MyLabelText" style="color:#000;font-weight: normal;">
+								<? echo GVCurrecyFormat($overallSalesAmt);?>
+								</label>
+							</div>
+						</div>
+						
+						<div class="row">
+							<div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
+								<label class="MyLabelText">Total Sales Discount Amount</label>
+							</div>
+							
+							<div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
+								<label class="MyLabelText" style="color:#000;font-weight: normal;">
+								<? echo GVCurrecyFormat($overallDiscountAmt);?>
+								</label>
+							</div>
+						</div>
+						
+						<div class="row">
+							<div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
+								<label class="MyLabelText">Total Sales Outstanding Balance</label>
+							</div>
+							
+							<div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
+								<label class="MyLabelText" style="color:#000;font-weight: normal;">
+								<? echo GVCurrecyFormat($overallBalanceAmt);?>
+								</label>
+							</div>
+						</div>
+						
+						<div class="row">
+							<div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
+								<label class="MyLabelText">Total Sales Profit</label>
+							</div>
+							
+							<div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
+								<label class="MyLabelText" style="color:#000;font-weight: normal;">
+								<? echo GVCurrecyFormat($overallSalesProfit);?>
+								</label>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+			
+			<div class="col-lg-3 col-md-3 col-sm-3 col-xs-3">
+				<div class="card">
+					<div class="card-header" style='background-color: #E7E9EB;'><label class='MyLabelText' style='margin:0px;padding:0px;'>Overall Product Summary</label></div>
+					<div class="card-body" id='ProductDIV' style='overflow-y:auto;width:100%;'>
+						<div class="row">
+							<div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
+								<label class="MyLabelText">Total Products</label>
+							</div>
+							
+							<div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
+								<label class="MyLabelText" style="color:#000;font-weight: normal;"><? echo $totProduct;?></label>
+							</div>
+						</div>
+						
+						<div class="row">
+							<div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
+								<label class="MyLabelText">Available Products</label>
+							</div>
+							
+							<div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
+								<label class="MyLabelText" style="color:#000;font-weight: normal;"><? echo $totAvailableProduct;?></label>
+							</div>
+						</div>
+						
+						<div class="row">
+							<div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
+								<label class="MyLabelText">Out of Stock Products</label>
+							</div>
+							
+							<div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
+								<label class="MyLabelText" style="color:#000;font-weight: normal;"><? echo $totOutofStockProduct;?></label>
+							</div>
+						</div>
+						
+						<div class="row">
+							<div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
+								<label class="MyLabelText">Sold Products</label>
+							</div>
+							
+							<div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
+								<label class="MyLabelText" style="color:#000;font-weight: normal;"><? echo $totSoldProduct;?></label>
+							</div>
+						</div>
+						
+						<div class="row">
+							<div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
+								<label class="MyLabelText">Low Stock Products</label>
+							</div>
+							
+							<div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
+								<label class="MyLabelText" style="color:#000;font-weight: normal;"><? echo $totLowStockProduct;?></label>
+							</div>
+						</div>
+						
+						<div class="row">
+							<div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
+								<label class="MyLabelText">Total Product Quantity</label>
+							</div>
+							
+							<div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
+								<label class="MyLabelText" style="color:#000;font-weight: normal;"><? echo $total_qty;?></label>
+							</div>
+						</div>
+						
+						<div class="row">
+							<div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
+								<label class="MyLabelText">Sold Product Quantity</label>
+							</div>
+							
+							<div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
+								<label class="MyLabelText" style="color:#000;font-weight: normal;"><? echo $sold_qty;?></label>
+							</div>
+						</div>
+						
+						<div class="row">
+							<div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
+								<label class="MyLabelText">Remaining Product Quantity</label>
+							</div>
+							
+							<div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
+								<label class="MyLabelText" style="color:#000;font-weight: normal;"><? echo $remaining_qty;?></label>
+							</div>
+						</div>
+						
+						<div class="row">
+							<div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
+								<label class="MyLabelText">Total Product Amount</label>
+							</div>
+							
+							<div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
+								<label class="MyLabelText" style="color:#000;font-weight: normal;">
+								<? echo GVCurrecyFormat($tot_purchase_amt);?>
+								</label>
+							</div>
+						</div>
+						
+						<div class="row">
+							<div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
+								<label class="MyLabelText">Total Sold Product Amount</label>
+							</div>
+							
+							<div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
+								<label class="MyLabelText" style="color:#000;font-weight: normal;">
+								<? echo GVCurrecyFormat($tot_sales_amt);?>
+								</label>
+							</div>
+						</div>
+						
+						<div class="row">
+							<div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
+								<label class="MyLabelText">Remaining Product Amount</label>
+							</div>
+							
+							<div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
+								<label class="MyLabelText" style="color:#000;font-weight: normal;">
+								<? echo GVCurrecyFormat($remaining_stock_amt);?>
+								</label>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+	
+	<? include("page_footer.html"); ?>
+	
+	<script type='text/javascript'>
+		var windowHeight = window.innerHeight * 0.60;
+		
+		if(document.getElementById("AlertDIV"))
+		{
+			document.getElementById("AlertDIV").style.maxHeight = windowHeight;
+			document.getElementById("AlertDIV").style.minHeight = windowHeight;
+		}
+		
+		if(document.getElementById("AccountDIV"))
+		{
+			document.getElementById("AccountDIV").style.maxHeight = windowHeight;
+			document.getElementById("AccountDIV").style.minHeight = windowHeight;
+		}
+		
+		if(document.getElementById("ProductDIV"))
+		{
+			document.getElementById("ProductDIV").style.maxHeight = windowHeight;
+			document.getElementById("ProductDIV").style.minHeight = windowHeight;
+		}
+	</script>

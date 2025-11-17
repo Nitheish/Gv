@@ -1,0 +1,223 @@
+	<style>
+	.form-group {
+	    margin-bottom: 0px;
+	}
+	</style>
+	<?
+		include("page_header.html");
+		include("../info/gv_setting_info.php"); 
+		include("gv_submenu.html");
+		
+		if($txtSortName == "")
+			$txtSortName = "customer_id";
+		
+		if($txtSortMethod == "" || !in_array($txtSortMethod,$GV_sortingArr))
+			$txtSortMethod = "desc";
+		
+		if($GVorderBy == "")
+			$GVorderBy = $txtSortName." ".$txtSortMethod;
+		
+		$custExistsArr = array();
+		$MySelectQry = "select distinct(customer_id) from sales_info where";
+		$MySelectQry .= " company_id=?";MYSQL_BuildArray("company_id",$company_id,"s");
+		$MyDbResult =  MyDbQuery($MySelectQry,$_GVParamArray);	
+		while($MyRowData = mysqli_fetch_array($MyDbResult, MYSQLI_ASSOC)) 
+		{
+			$custExistsArr[] = GVStringFormat($MyRowData['customer_id']);
+		}
+		MyDbFreeResult($MyDbResult);
+		
+		$page_name = "gv_customer_list";
+		
+		if($GVSaveBtn == "SEARCH" || $GVSaveBtn == "RESET")
+		{
+			$currentPage = 1;
+			$startRecord = 0;
+		}
+		
+		$serachOptArr = array();
+		$serachOptArr["NAME"] = "Customer Name";
+		$serachOptArr["CODE"] = "Customer No";
+		
+		if($cboSearchOpt == "")
+			$cboSearchOpt = "NAME";
+		
+		$pagePerRecordArr = array();
+		$pagePerRecordArr[10] = 10;
+		$pagePerRecordArr[25] = 25;
+		$pagePerRecordArr[50] = 50;
+		
+		$FILTER_OPTION = "SAVE";
+		$FILTER_ARR["cboSearchOpt"] = $cboSearchOpt;
+		$FILTER_ARR["txtSearchStr"] = $txtSearchStr;
+		include("../backend/gv_filter_info.php"); 
+		$GVPaginationInd = 1;
+		
+		$MySelectQry = "select cust.*,count(customer_id) over() as totCnt";
+		$MySelectQry .= " from customer_info cust where";
+		$MySelectQry .= " company_id=?";MYSQL_BuildArray("company_id",$company_id,"s");
+		$MySelectQry .= " and delete_ind=?";MYSQL_BuildArray("delete_ind","0","s");
+		
+		if($cboSearchOpt == "NAME" && strlen($txtSearchStr) > 0)
+		{
+			$MySelectQry .= " and customer_name like CONCAT('%', ?, '%')";MYSQL_BuildArray("customer_name",$txtSearchStr,"s");
+		}
+		else if($cboSearchOpt == "CODE" && strlen($txtSearchStr) > 0)
+		{
+			$MySelectQry .= " and customer_code=?";MYSQL_BuildArray("customer_code",strtoupper($txtSearchStr),"s");
+		}
+		
+		$MySelectQry .= " order by $GVorderBy LIMIT $numRecordPerPage offset $startRecord";
+		$MyDbResult =  MyDbQuery($MySelectQry,$_GVParamArray);
+		$MyNumRows = MyDbNumRows($MyDbResult);
+		$MyRowData = mysqli_fetch_array($MyDbResult, MYSQLI_ASSOC);
+		$totNumRecord = GVStringFormat($MyRowData['totCnt']);
+	?>
+	<div class="container-fluid">
+		<div class="row" style='padding:12px 7px 0px 0px;'>
+			<div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
+				<label class="MyTextHeading"><i class='fa fa-group'></i><span>Customer Details List</span></label>
+			</div>
+		</div>
+		
+		<div class='GVSearchBar'>
+			<?
+			echo "<label class='MyLabelText text-left' style='margin:3px;'>Search</label>";
+			GVComboBox("INPUT","cboSearchOpt","cboSearchOpt",$serachOptArr,"","width:150px;margin-left: 5px;","onchange='cboSearchOpt_onchanged(this.value);'");
+			GVTextBox("INPUT","txtSearchStr","txtSearchStr","","width:200px;margin-left: 5px;","maxlength='35' placeholder='Customer Name'"); 
+			
+			GVimageButton("SEARCH","GVSaveBtn","GVSearchBtn",GVimage("image","image","/gvtech/images/search.png","","","width='15'"),"submit","SECONDARY","margin-left:5px;height:27px;font-size:11px;","");  
+			GVimageButton("RESET","GVSaveBtn","GVResetBtn",GVimage("image","image","/gvtech/images/Refresh.png","","","width='15'"),"button","SECONDARY","margin-left:5px;height:27px;font-size:11px;","onclick='reset_btnClick();'");  
+			
+			echo "<label class='MyLabelText text-left' style='margin:3px;margin-left: 5px;'>Show</label>";
+			GVComboBox("INPUT","numRecordPerPage","numRecordPerPage",$pagePerRecordArr,"","margin-left: 5px;width:50px;","onchange='GVPagePerRecord_onchange();'"); 
+			echo "<label class='MyLabelText text-left' style='margin:3px;margin-left: 2px;'>Records</label>";
+			
+			$AddURL = GVstringEncrption("LoadHtmlPage=gv_customer_details&GVmenu=$GVmenu&GVsubMenu=$GVsubMenu&GVSTEP=ADD");
+			GVimageButton("ADD NEW","GVloginBtn","GVloginBtn",GVimage("image","image","/gvtech/images/add.png","","","width='15'"),"button","SECONDARY","text-align: right;float: right;margin-left: auto;height:27px;font-size:11px;","onclick='setGVPopupSession(\"$AddURL\",\"$GV_PopupSSDATA\",700,400);'");  
+			?>
+		</div>
+		
+		<? if($totNumRecord > 0) { ?>
+		
+		<div id='mainTableID' class="table-responsive GVtableHeadDIV" style='overflow-y:auto;width:100%;'>          
+			<table class="table table-hover GVtableHeadFixed" style='width:100%;margin-top:0px !important;'>
+				<thead>
+					<tr>
+						<th width='5%' class='GVtableHead text-center'>S.No</th>
+						<th width='12%' class='GVtableHead text-left'>Customer No<? GVSortMethod("customer_id",$txtSortMethod); ?></th>
+						<th width='22%' class='GVtableHead text-left'>Customer Name<? GVSortMethod("customer_name",$txtSortMethod); ?></th>
+						<th width='15%' class='GVtableHead text-left'>Phone Number<? GVSortMethod("customer_phone",$txtSortMethod); ?></th>
+						<th width='20%' class='GVtableHead text-left'>E-mail<? GVSortMethod("customer_email",$txtSortMethod); ?></th>
+						<th width='20%' class='GVtableHead text-left'>Address</th>
+						<th width='5%' class='GVtableHead text-center'>Action</th>
+					</tr>
+				</thead>
+				
+				<tbody>
+					<?
+					$custCount = $startRecord;
+					do
+					{
+						$customer_id = GVStringFormat($MyRowData['customer_id']);
+						$customer_code = GVStringFormat($MyRowData['customer_code']);
+						$customer_name = GVStringFormat($MyRowData['customer_name']);
+						$customer_phone = GVStringFormat($MyRowData['customer_phone']);
+						$customer_email = GVStringFormat($MyRowData['customer_email']);
+						$customer_addr1 = GVStringFormat($MyRowData['customer_addr1']);
+						$customer_addr2 = GVStringFormat($MyRowData['customer_addr2']);
+						$customer_city = GVStringFormat($MyRowData['customer_city']);
+						$customer_state = GVStringFormat($MyRowData['customer_state']);
+						$customer_zip = GVStringFormat($MyRowData['customer_zip']);
+						
+						$customerAddr = "";
+						
+						if($customer_addr1 != "")
+							$customerAddr = $customer_addr1.", ";
+						if($customer_addr2 != "")
+							$customerAddr .= $customer_addr2.", ";
+						if($customer_city != "")
+							$customerAddr .= $customer_city.", ";
+						if($customer_state != "")
+							$customerAddr .= $customer_state;
+						if($customer_zip != "")
+							$customerAddr .= " - ".$customer_zip;
+						
+						$gvCustomDesc = "$customer_name ($customer_code)";
+						$editLink = GVstringEncrption("LoadHtmlPage=gv_customer_details&GVmenu=$GVmenu&GVsubMenu=$GVsubMenu&GVSTEP=EDIT&GVID=$customer_id");
+						$DelLink = GVstringEncrption("LoadHtmlPage=gv_customer_del&GVSTEP=DELETE&GVID=$customer_id&gvCustomDesc=$gvCustomDesc");
+						
+						$custCount++;
+						?>
+						
+						<tr>
+							<td class='GVtableData text-center'><? echo $custCount; ?></td>
+							<td class='GVtableData text-left'><? echo $customer_code; ?></td>
+							<td class='GVtableData text-left'><? echo $customer_name; ?></td>
+							<td class='GVtableData text-left'><? echo $customer_phone; ?></td>
+							<td class='GVtableData text-left'><? echo $customer_email; ?></td>
+							<td class='GVtableData text-left'><? echo $customerAddr; ?></td>
+							<td class='GVtableData text-center'> 
+							<?
+								echo GVimage("GVedit","GVedit","/gvtech/images/edit.png","","cursor:pointer;","width='15' title='Edit' onclick=setGVPopupSession('$editLink','$GV_PopupSSDATA',700,400);");
+								
+								if(!in_array($customer_id, $custExistsArr))
+									echo GVimage("GVdel","GVdel","/gvtech/images/delete.png","","margin-left:7px;cursor:pointer;","width='15' title='Delete' onclick=setGVPopupSession('$DelLink','$GV_PopupSSDATA',400,150);");
+							?>
+							</td>
+						</tr>
+						
+					<?
+					}
+					while($MyRowData = mysqli_fetch_array($MyDbResult, MYSQLI_ASSOC));
+					?>
+					
+				</tbody>
+			</table>
+		</div>
+		<? } else { ?>
+			<div class="row" style='padding-top:75px;'>
+				<div class="col-lg-12 col-md-12 col-sm-12 col-xs-12 text-center">
+					<? if(strlen($txtSearchStr) > 0) { ?>
+					<label class="MyTextWarning"><? echo GVimage("image","image","/gvtech/images/search.png","","","width='75'");  ?><br>No data found Please change the filter</label><br>
+					<? GVInputButton("Reset","GVSaveBtn","GVSaveBtn","submit","SECONDARY","","onclick='reset_btnClick();'");?>
+					<? } else if($totNumRecord == 0) { ?>
+					<label class="MyTextWarning"><i class='fa fa-group''></i><br><br>You don't have any Customer Information</label>
+					<? } ?>
+				</div>
+			</div>
+		<? } ?>
+		
+		<? include("gv_pagination.html"); ?>
+	</div>
+	
+	<? include("page_footer.html"); ?>
+	
+	<script type='text/javascript'>
+		var windowHeight = window.innerHeight * 0.71;
+		
+		if(document.getElementById("mainTableID"))
+		{
+			document.getElementById("mainTableID").style.maxHeight = windowHeight;
+			document.getElementById("mainTableID").style.minHeight = windowHeight;
+		}
+		 
+		function cboSearchOpt_onchanged(value)
+		{
+			var _selectedFilter = $("#cboSearchOpt option:selected").text();
+			$("#txtSearchStr").attr("placeholder", _selectedFilter);
+		}
+		
+		function reset_btnClick()
+		{
+			$("#cboSearchOpt").val("NAME");
+			$("#txtSearchStr").val("");
+			var _selectedFilter = $("#cboSearchOpt option:selected").text();
+			$("#txtSearchStr").attr("placeholder", _selectedFilter);
+			GVcallLoader();
+			GVformPost();
+		}
+		
+		cboSearchOpt_onchanged('<? echo $cboSearchOpt; ?>');
+		
+	</script>

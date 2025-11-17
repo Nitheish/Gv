@@ -1,0 +1,37 @@
+<div style='position:relative;'>
+<nav id="sidebar" class="sidebar-wrapper">
+    <div class="sidebar-content">
+        <div class="sidebar-menu">
+           <ul style='margin-top:10px;'>
+		<? 
+		for($GVsubMenuCount = 0;$GVsubMenuCount < count($GVsubMenuArr); $GVsubMenuCount++) 
+		{
+			$linkDesc = $GVsubMenuArr[$GVsubMenuCount]["DESC"];
+			$linkImage = $GVsubMenuArr[$GVsubMenuCount]["IMG"];
+			$linkTag = $GVsubMenuArr[$GVsubMenuCount]["TAG"];
+			$linkURL = $GVsubMenuArr[$GVsubMenuCount]["LINK"];
+			
+			$linkClass = "";
+			
+			if($GVsubMenu == $linkTag)
+				$linkClass = "active";
+			
+			echo "<li class='$linkClass' onclick='setGVPageSession(\"$linkURL\",\"$GV_PageSSDATA\",\"1\");GVcallLoader();'>$linkImage<span>$linkDesc</span></li>";	
+		}
+		?>
+	 </ul>
+        </div>
+    </div>
+</nav>
+</div>
+<? if(count($GVsubMenuArr) == 0) { ?>
+<script>
+$(".page-wrapper").removeClass("toggled");
+</script>
+<? } else { ?>
+<script>
+$(".main-content").css("margin-left","260px");
+</script>
+<? } ?>
+
+
