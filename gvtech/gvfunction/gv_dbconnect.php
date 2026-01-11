@@ -1,16 +1,16 @@
 <?
 	$GLOBALS['_GVconn'] = null;
-	
+	$GLOBALS['DB_NAME'] = "gvcollection";
 	if(!function_exists('MyDbConnect'))
 	{
 		function MyDbConnect()
 		{
 			$serverName = "localhost";
-			$username = "69384a766858337562646936392b7677394d585767462f4e4365304d726f7849456739567a3878353662546c78467863693343536a77566970345a55736137423866443532757a43767a4631662f6d73473049566f673d3d";
-			$password = "6d5a436761674c324e6c5a46426a67696f54596e346b58373753397a3134324f55695a4d744a4b6d793774594275706e32715a52732b3756716643794833764f377434627567742f7473323358564e77373268636c513d3d";
+			$username = "root";
+			$password = "";
 			$dbName = $GLOBALS['DB_NAME'];
 	
-			$GLOBALS['_GVconn'] = new mysqli($serverName, GVstringDecrption($username), GVstringDecrption($password), $dbName);
+			$GLOBALS['_GVconn'] = new mysqli($serverName,$username, $password, $dbName);
 		}
 	}
 	

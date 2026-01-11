@@ -5,7 +5,7 @@ include("gv_header.php");
 // Check if form is submitted
 if($GVSaveBtn == "Associate Employees") {
 
-    $company_id    = $_POST['company_id'] ?? $company_id; // from session or hidden input
+    
     $department_id = $_POST['department_id'] ?? '';
     $employee_ids  = $_POST['employee_id'] ?? [];
 
@@ -54,10 +54,11 @@ if($GVSaveBtn == "Associate Employees") {
         }
 
         // Success message
-       include("../html/gv_emp_associate_info.html");
+        include("../html/gv_employee_info.html");
     } else {
         // On error, go back to the form
-        include("../html/gv_emp_associate_info.html");
+        include("../html/gv_employee_info.html");
+        
     }
 }
 include("../gv_footer.php");

@@ -82,7 +82,7 @@ MyDbFreeResult($MyDbResult);
         </div>
         <div class="col-lg-2 col-md-2 col-sm-2 col-xs-2 text-right">
             <? 
-            $GVBackSummaryLink = GVstringEncrption("LoadHtmlPage=gv_emp_associate_list&GVmenu=$GVmenu&GVsubMenu=$GVsubMenu"); 
+            $GVBackSummaryLink = GVstringEncrption("LoadHtmlPage=gv_emp_ass_list&GVmenu=$GVmenu&GVsubMenu=$GVsubMenu"); 
             ?>
             <span class="badge badge-secondary" style="padding:8px;cursor:pointer;" 
                 onclick="GVcallLoader();setGVPageSession('<? echo $GVBackSummaryLink;?>','<? echo $GV_PageSSDATA;?>',1);" 
@@ -99,7 +99,7 @@ MyDbFreeResult($MyDbResult);
         <!-- Column 2: Department & Employee -->
         <div class="col-lg-4 col-md-4 col-sm-12">
             <div style="box-shadow: rgba(0,0,0,0.24) 0px 3px 8px;padding:40px;">
-                <form method="post" action="backend/gv_emp_associate_info.php">
+                <form method="post" action="backend/gv_emp_ass_info.php">
                     <label class="MyLabelText">Select Department</label>
                     <select id="department_id" name="department_id" class="form-control" required onchange="loadEmployees();">
                         <option value="">-- Select Department --</option>
@@ -107,6 +107,7 @@ MyDbFreeResult($MyDbResult);
                             <option value="<? echo $id; ?>"><? echo htmlspecialchars($name); ?></option>
                         <? } ?>
                     </select>
+                    
 
                     <br>
                     <label class="MyLabelText">Select Employees</label>
@@ -130,7 +131,7 @@ MyDbFreeResult($MyDbResult);
         <div id="mappedEmployees" style="margin-top:10px;">
             <? foreach($mappedEmployees as $emp) { 
                 $gvCustomDesc = $emp['name'] . " (" . $emp['department'] . ")";
-                $DelLink = GVstringEncrption("LoadHtmlPage=gv_delete_associate_info&GVSTEP=DELETE&GVID={$emp['id']}&gvCustomDesc=$gvCustomDesc");
+                $DelLink = GVstringEncrption("LoadHtmlPage=gv_emp_ass_del&GVSTEP=DELETE&GVID={$emp['id']}&gvCustomDesc=$gvCustomDesc");
             ?>
                 <span class="badge badge-info" style="font-size:14px;padding:10px;" data-id="<? echo $emp['id']; ?>">
                     <? echo htmlspecialchars($gvCustomDesc); ?>
@@ -157,25 +158,24 @@ MyDbFreeResult($MyDbResult);
 <? include("page_footer.html"); ?>
 
 <script>
-async function loadEmployees() {
-    const deptId = document.getElementById("department_id").value;
-    const employeeSelect = document.getElementById("employee_id");
+    function loadEmployees() 
+{
+    var deptId = $('#department_id').val();
 
-    employeeSelect.innerHTML = "<option>Loading...</option>";
-
-    try {
-        const response = await fetch("get_employees_by_department.php", {
-            method: "POST",
-            headers: { "Content-Type": "application/x-www-form-urlencoded" },
-            body: "GVSTEP=EMPLOYEE&company_id=<? echo $company_id; ?>&department_id=" + deptId
-        });
-
-        const html = await response.text();   // response is HTML <option> list
-        employeeSelect.innerHTML = html;
-    } catch (error) {
-        console.error("Error:", error);
-        employeeSelect.innerHTML = "<option disabled>Failed to load employees</option>";
-    }
+    $.ajax({
+        url: "gv_emp_by_dep.php",
+        type: "POST",
+        cache: false,
+        data: {
+            GVSTEP: "EMPLOYEE",
+            
+            department_id: deptId
+        },
+        success: function(response) 
+        {
+            $("#employee_id").html(response);  // response is <option> list
+        }
+    });
 }
 
 

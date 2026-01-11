@@ -36,6 +36,7 @@
 		
 		$serachOptArr = array();
 		$serachOptArr["NAME"] = "Employee Name";
+		$serachOptArr["DEPT"] = "Department Name";
 		$serachOptArr["CODE"] = "Comapany Name";
 
 		if ($cboSearchOpt == "") $cboSearchOpt = "NAME";
@@ -54,7 +55,7 @@
 
 		
 		// ✅ Main Query with Joins
-$MySelectQry  = "SELECT ass.associate_id,
+		$MySelectQry  = "SELECT ass.associate_id,
                         c.company_name,
                         d.department_name,
                         e.gv_username AS employee_name,
@@ -75,6 +76,9 @@ $MySelectQry  = "SELECT ass.associate_id,
 				} else if ($cboSearchOpt == "CODE" && strlen($txtSearchStr) > 0) {
 					$MySelectQry .= " AND c.company_name LIKE CONCAT('%', ?, '%')";
 					MYSQL_BuildArray("company_name", $txtSearchStr, "s");
+				}else if ($cboSearchOpt == "DEPT" && strlen($txtSearchStr) > 0) {
+					$MySelectQry .= " AND d.department_name LIKE CONCAT('%', ?, '%')";
+					MYSQL_BuildArray("department_name", $txtSearchStr, "s");
 				}
 
 				$MySelectQry .= " ORDER BY $GVorderBy LIMIT $numRecordPerPage OFFSET $startRecord";
@@ -111,7 +115,7 @@ $MySelectQry  = "SELECT ass.associate_id,
 			$pdfLink = "../backend/gv_page_redirect.php?SkipSSDataInd=1".GVqueryString("LoadHtmlPage=gv_settings_pdf_export&GVmenu=$GVmenu&GVsubMenu=$GVsubMenu&cboSearchOpt=$cboSearchOpt&txtSearchStr=$txtSearchStr&GVorderBy=$GVorderBy&cbodepartmentOption=$cbodepartmentOption&cboListOption=$cboListOption");
 			GVanchor("GVPdf","GVPdf","$pdfLink","",GVimage("GVPdf","GVPdf","/gvtech/images/pdf.png","","cursor:pointer;float:right;margin-left: auto;width:27px;height:27px;margin-left:10px;padding:3px;","title='Export to PDF'"),"","");
 								
-			$AddURL = GVstringEncrption("LoadHtmlPage=gv_emp_associate_info&GVmenu=$GVmenu&GVsubMenu=$GVsubMenu");
+			$AddURL = GVstringEncrption("LoadHtmlPage=gv_emp_ass_info&GVmenu=$GVmenu&GVsubMenu=$GVsubMenu");
 
 			GVimageButton(
 				"ADD NEW",
@@ -151,16 +155,8 @@ $MySelectQry  = "SELECT ass.associate_id,
 						$department_name = GVStringFormat($MyRowData['department_name']);
 						$employee_name   = GVStringFormat($MyRowData['employee_name']);
 						$associate_id    = GVStringFormat($MyRowData['associate_id']); 
-
-						$editLink = GVstringEncrption("LoadHtmlPage=gv_associate_info&GVmenu=$GVmenu&GVsubMenu=$GVsubMenu&GVSTEP=EDIT&GVID=$associate_id");
-						$DelLink  = GVstringEncrption("LoadHtmlPage=gv_associate_del&GVSTEP=DELETE&GVID=$associate_id");
-						$infoLink = GVstringEncrption("LoadHtmlPage=gv_associate_information&GVmenu=$GVmenu&GVsubMenu=$GVsubMenu&GVID=$associate_id");
-						
-						$recCount++;
-						
-						
-						
-							
+						$DelLink  = GVstringEncrption("LoadHtmlPage=gv_emp_ass_del&GVSTEP=DELETE&GVID=$associate_id");
+						$recCount++;	
 						?>
 						
 						<tr>
@@ -171,8 +167,6 @@ $MySelectQry  = "SELECT ass.associate_id,
 							<td class='GVtableData text-left'><? echo $employee_name; ?></td>
 							<td class='GVtableData text-center'>
 								<? 
-									echo GVimage("GVedit","GVedit","/gvtech/images/edit.png","","cursor:pointer;","width='15' title='Edit' onclick=setGVPopupSession('$editLink','$GV_PopupSSDATA',700,400);");
-									echo GVimage("GVinfo","GVinfo","/gvtech/images/summary.png","","margin-left:7px;cursor:pointer;","width='18' title='Info' onclick=GVcallLoader();setGVPageSession('$infoLink','$GV_PageSSDATA',1);");
 									echo GVimage("GVdel","GVdel","/gvtech/images/delete.png","","margin-left:7px;cursor:pointer;","width='15' title='Delete' onclick=setGVPopupSession('$DelLink','$GV_PopupSSDATA',400,150);");
 								?>
 							</td>

@@ -1,6 +1,7 @@
 <?
-$GVpageTitle = "EMPLOYEE INFORMATION";
-include("gv_popup_header.html");
+include("page_header.html");
+
+$page_name = "gv_employee_info";
 
 if($ErrorInd == 0)
 {
@@ -11,7 +12,8 @@ if($ErrorInd == 0)
     $txtPhone        = "";
     $txtJoiningDate  = "";
     $txtDateOfBirth  = "";
-    $txtAddress      = "";
+    $txtAddress1      = "";
+    $txtAddress2      = "";
     $txtCity         = "";
     $txtState        = "";
     $txtPincode      = "";
@@ -26,12 +28,13 @@ if($ErrorInd == 0)
         {
             $txtEmployeeName = GVStringFormat($MyRowData['emp_name']);
             $txtUsername     = GVStringFormat($MyRowData['gv_username']);
-            $txtPassword     = GVstringDecrption($MyRowData['gv_password']); // ✅ decrypt before showing
+            $txtPassword     = GVstringDecrption($MyRowData['gv_password']); 
             $txtEmail        = GVStringFormat($MyRowData['emp_email']);
             $txtPhone        = GVStringFormat($MyRowData['emp_phone']);
             $txtJoiningDate  = GVStringFormat($MyRowData['date_of_join']);
             $txtDateOfBirth  = GVStringFormat($MyRowData['date_of_birth']);
-            $txtAddress      = GVStringFormat($MyRowData['emp_addr1']); // using addr1
+            $txtAddress1      = GVStringFormat($MyRowData['emp_addr1']); 
+            $txtAddress2      = GVStringFormat($MyRowData['emp_addr2']); 
             $txtCity         = GVStringFormat($MyRowData['emp_city']);
             $txtState        = GVStringFormat($MyRowData['emp_state']);
             $txtPincode      = GVStringFormat($MyRowData['emp_zip']);
@@ -39,117 +42,270 @@ if($ErrorInd == 0)
         MyDbFreeResult($MyDbResult);
     }
 }
+
+$selectedDeptArr = [];
+
+if ($GVSTEP == "EDIT") {
+
+    $deptSelQry = "SELECT department_id
+                   FROM associate_info
+                   WHERE company_id=? 
+                     AND employee_id=? 
+                     AND delete_ind=0";
+
+    MYSQL_BuildArray("company_id", $company_id, "s");
+    MYSQL_BuildArray("employee_id", $GVID, "s");
+
+    $res = MyDbQuery($deptSelQry, $_GVParamArray);
+
+    while ($row = mysqli_fetch_array($res, MYSQLI_ASSOC)) {
+        $selectedDeptArr[] = $row['department_id'];
+    }
+    MyDbFreeResult($res);
+}
+
+
+$deptQry = "SELECT DISTINCT department_id, department_name
+            FROM department_info
+            WHERE company_id=? AND delete_ind=0 AND active_ind=1
+            ORDER BY department_name";
+
+MYSQL_BuildArray("company_id", $company_id, "s");
+$MyDbResult = MyDbQuery($deptQry, $_GVParamArray);
+
+$departmentArr = [];
+while($row = mysqli_fetch_array($MyDbResult, MYSQLI_ASSOC)) {
+    $departmentArr[$row['department_id']] = $row['department_name'];
+}
+MyDbFreeResult($MyDbResult);
+
+
 ?>
 
-<div class="container-fluid" style='margin-top:10px;margin-bottom:10px;'>
+<style>
+.form-group { margin-bottom: 8px; }
+.badge-remove {
+    background: #dc3545;
+    color: #fff;
+    padding: 4px 8px;
+    border-radius: 10px;
+    margin: 2px;
+    cursor: pointer;
+}
+</style>
 
-    <div class="row">
-        <div class="col-lg-4 col-md-4 col-sm-4 col-xs-4 text-right">
-            <label class="MyLabelText">Employee Name</label>
+<div class="container-fluid">
+    <div class="row" style="padding: 12px 7px 0px 0px;">
+        <div class="col-lg-10 col-md-10 col-sm-10 col-xs-10">
+            <label class="MyTextHeading"><i class="fa fa-building"></i><span>Employee Information</span></label>
         </div>
-        <div class="col-lg-6 col-md-6 col-sm-6 col-xs-6">
-            <? GVTextBox("INPUT","txtEmployeeName","txtEmployeeName",$txtEmployeeName,"","maxlength='35' placeholder='Employee Name'"); ?> 
+        <div class="col-lg-2 col-md-2 col-sm-2 col-xs-2 text-right">
+            <? 
+            $GVBackSummaryLink = GVstringEncrption("LoadHtmlPage=gv_employee_list&GVmenu=$GVmenu&GVsubMenu=$GVsubMenu"); 
+            ?>
+            <span class="badge badge-secondary" style="padding:8px;cursor:pointer;" 
+                onclick="GVcallLoader();setGVPageSession('<? echo $GVBackSummaryLink;?>','<? echo $GV_PageSSDATA;?>',1);" 
+                title="Back to Employee Association List">
+                <i class="fa fa-mail-reply" style="font-size:14px;"></i>
+            </span>
         </div>
     </div>
 
-    <div class="row" style='padding-top: 5px;'>
-        <div class="col-lg-4 col-md-4 col-sm-4 col-xs-4 text-right">
-            <label class="MyLabelText">Username</label>
-        </div>
-        <div class="col-lg-6 col-md-6 col-sm-6 col-xs-6">
-            <? GVTextBox("INPUT","txtUsername","txtUsername",$txtUsername,"","maxlength='40' placeholder='Username'"); ?>
-        </div>
-    </div>
-    <? if($GVSTEP == "ADD") { ?>
-    <div class="row" style='padding-top: 5px;'>
-        <div class="col-lg-4 col-md-4 col-sm-4 col-xs-4 text-right">
-            <label class="MyLabelText">Password</label>
-        </div>
-        <div class="col-lg-6 col-md-6 col-sm-6 col-xs-6">
-            <? GVTextBox("INPUT","txtPassword","txtPassword",$txtPassword,"","maxlength='40' placeholder='Password'"); ?>
-        </div>
-    </div>
-    <? }  ?>
-    
+    <div class="row" style="margin-top:15px;">
+        
+        <div class="col-lg-4 col-md-4 col-sm-12">
+            <div style="box-shadow: rgba(0,0,0,0.24) 0px 3px 8px;padding-top:10px;">
+                <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
+                    <label class="MyTextHeading"><i class="fa fa-id-card"></i><span>Basic Information</span></label>
+                </div>
+                <div style="padding: 40px;">
+                    <div class="row">
+                        <div class="col-lg-6 col-md-6 col-sm-6 col-xs-6 text-right">
+                            <label class="MyLabelText">Employee Name</label>
+                        </div>
+                        <div class="col-lg-6 col-md-6 col-sm-6 col-xs-6">
+                            <? GVTextBox("INPUT","txtEmployeeName","txtEmployeeName",$txtEmployeeName,"","maxlength='35' placeholder='Employee Name'"); ?> 
+                        </div>
+                    </div>
+                    <div class="row" style='padding-top: 5px;'>
+                        <div class="col-lg-6 col-md-6 col-sm-6 col-xs-6 text-right">
+                            <label class="MyLabelText">Email</label>
+                        </div>
+                        <div class="col-lg-6 col-md-6 col-sm-6 col-xs-6">
+                            <? GVTextBox("INPUT","txtEmail","txtEmail",$txtEmail,"","maxlength='50' placeholder='Email'"); ?>
+                        </div>
+                    </div>
 
-    <div class="row" style='padding-top: 5px;'>
-        <div class="col-lg-4 col-md-4 col-sm-4 col-xs-4 text-right">
-            <label class="MyLabelText">Email</label>
+                    <div class="row" style='padding-top: 5px;'>
+                        <div class="col-lg-6 col-md-6 col-sm-6 col-xs-6 text-right">
+                            <label class="MyLabelText">Phone</label>
+                        </div>
+                        <div class="col-lg-6 col-md-6 col-sm-6 col-xs-6">
+                            <? GVTextBox("INPUT","txtPhone","txtPhone",$txtPhone,"","maxlength='10' placeholder='Phone'"); ?>
+                        </div>
+                    </div>
+
+                    <div class="row" style='padding-top: 5px;'>
+                        <div class="col-lg-6 col-md-6 col-sm-6 col-xs-6 text-right">
+                            <label class="MyLabelText">Date of Birth</label>
+                        </div>
+                        <div class="col-lg-6 col-md-6 col-sm-6 col-xs-6">
+                            <!-- <? GVTextBox("INPUT","txtDateOfBirth","txtDateOfBirth",$txtDateOfBirth,"","placeholder='YYYY-MM-DD'"); ?> -->
+                            <? GVDateBox("INPUT","txtDateOfBirth","txtDateOfBirth","","","maxlength='10'");  ?>
+                        </div>
+                    </div>
+
+                    <div class="row" style='padding-top: 5px;'>
+                        <div class="col-lg-6 col-md-6 col-sm-6 col-xs-6 text-right">
+                            <label class="MyLabelText">Joining Date</label>
+                        </div>
+                        <div class="col-lg-6 col-md-6 col-sm-6 col-xs-6">
+                            <? GVDateBox("INPUT","txtJoiningDate","txtJoiningDate","","","maxlength='10'"); ?>
+                        </div>
+                    </div>
+
+                    <div class="row" style='padding-top: 5px;'>
+                        <div class="col-lg-6 col-md-6 col-sm-6 col-xs-6 text-right">
+                            <label class="MyLabelText">Address1</label>
+                        </div>
+                        <div class="col-lg-6 col-md-6 col-sm-6 col-xs-6">
+                            <? GVTextBox("INPUT","txtAddress1","txtAddress1",$txtAddress1,"","maxlength='35' placeholder='Address1'",""); ?>
+                        </div>
+                    </div>
+
+                    <div class="row" style='padding-top: 5px;'>
+                        <div class="col-lg-6 col-md-6 col-sm-6 col-xs-6 text-right">
+                            <label class="MyLabelText">Address2</label>
+                        </div>
+                        <div class="col-lg-6 col-md-6 col-sm-6 col-xs-6">
+                            <? GVTextBox("INPUT","txtAddress2","txtAddress2",$txtAddress2,"","maxlength='35' placeholder='Address2'",""); ?>
+                        </div>
+                    </div>
+
+                    <div class="row" style='padding-top: 5px;'>
+                        <div class="col-lg-6 col-md-6 col-sm-6 col-xs-6 text-right">
+                            <label class="MyLabelText">City</label>
+                        </div>
+                        <div class="col-lg-6 col-md-6 col-sm-6 col-xs-6">
+                            <? GVTextBox("INPUT","txtCity","txtCity",$txtCity,"","maxlength='35' placeholder='City'"); ?>
+                        </div>
+                    </div>
+
+                    <div class="row" style='padding-top: 5px;'>
+                        <div class="col-lg-6 col-md-6 col-sm-6 col-xs-6 text-right">
+                            <label class="MyLabelText">State</label>
+                        </div>
+                        <div class="col-lg-6 col-md-6 col-sm-6 col-xs-6">
+                            <? GVTextBox("INPUT","txtState","txtState",$txtState,"","maxlength='35' placeholder='State'"); ?>
+                        </div>
+                    </div>
+
+                    <div class="row" style='padding-top: 5px;'>
+                        <div class="col-lg-6 col-md-6 col-sm-6 col-xs-6 text-right">
+                            <label class="MyLabelText">Pincode</label>
+                        </div>
+                        <div class="col-lg-6 col-md-6 col-sm-6 col-xs-6">
+                            <? GVTextBox("INPUT","txtPincode","txtPincode",$txtPincode,"","maxlength='10' placeholder='Pincode'"); ?>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
-        <div class="col-lg-6 col-md-6 col-sm-6 col-xs-6">
-            <? GVTextBox("INPUT","txtEmail","txtEmail",$txtEmail,"","maxlength='50' placeholder='Email'"); ?>
+   
+        <div class="col-lg-4 col-md-4 col-sm-12">
+            <div style="box-shadow: rgba(0,0,0,0.24) 0px 3px 8px;padding-top:10px;">
+                <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
+                    <label class="MyTextHeading"><i class="fa fa-user"></i><span>User Information</span></label>
+                </div>
+                <div style="padding: 40px;">    
+                    <? if ($GVSTEP == "EDIT") { ?>
+                    <div class="row" style="padding-top:5px;">
+                        <div class="col-lg-6 col-md-6 col-sm-6 col-xs-6 text-right">
+                            <label class="MyLabelText">Username</label>
+                        </div>
+                        <div class="col-lg-6 col-md-6 col-sm-6 col-xs-6">
+                            <div class="form-control" style="background:#f5f5f5;">
+                                <?= htmlspecialchars($txtUsername) ?>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row" style="padding-top:10px;">
+                        <div class="col-lg-12 text-center">
+                            <input type="checkbox" id="editLoginChk" onclick="toggleLoginEdit()">
+                            <label for="editLoginChk" style="cursor:pointer;">
+                                Edit Username / Password
+                            </label>
+                        </div>
+                    </div>
+                    <? } ?>
+                    <div id="loginEditSection" style="margin-top:10px; <? if ($GVSTEP == 'EDIT') echo 'display:none;'; ?>">
+                        <div class="row" style='padding-top: 5px;'>
+                            <div class="col-lg-6 col-md-6 col-sm-6 col-xs-6 text-right">
+                                    <label class="MyLabelText">Username</label>
+                            </div>
+                            <div class="col-lg-6 col-md-6 col-sm-6 col-xs-6">
+                                <? GVTextBox("INPUT","txtUsername","txtUsername",$txtUsername,"","maxlength='40' placeholder='Username'"); ?>
+                            </div>
+                        </div>
+                        <div class="row" style='padding-top: 5px;'>
+                            <div class="col-lg-6 col-md-6 col-sm-6 col-xs-6 text-right">
+                                <label class="MyLabelText">Password</label>
+                            </div>
+                            <div class="col-lg-6 col-md-6 col-sm-6 col-xs-6">
+                                <? GVPwdTextBox("INPUT","txtPassword","txtPassword","","","maxlength='15' placeholder='Password'"); ?>
+                            </div>
+                        </div>
+                        <div class="row" style='padding-top: 5px;'>
+                            <div class="col-lg-6 col-md-6 col-sm-6 col-xs-6 text-right">
+                                <label class="MyLabelText">Confirm Password</label>
+                            </div>
+                            <div class="col-lg-6 col-md-6 col-sm-6 col-xs-6">
+                                <? GVPwdTextBox("INPUT","txtConfirmPassword","txtConfirmPassword","","","maxlength='15' placeholder='Confirm Password'"); ?>
+                            </div>
+                        </div> 
+                    </div>  
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-4 col-md-4 col-sm-12">
+            <div style="box-shadow: rgba(0,0,0,0.24) 0px 3px 8px;padding-top:10px;">
+                <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
+                    <label class="MyTextHeading"><i class="fa fa-sitemap"></i><span>Department Information</span></label>
+                </div>
+                <div style="padding: 40px;">  
+                <label class="MyLabelText">Select Department</label>
+                    <select id="department_id" name="department_id[]" class="form-control" multiple required>
+                        <? foreach($departmentArr as $id => $name) { ?>
+                        <option value="<?= $id ?>"
+                           <? if (in_array($id, $selectedDeptArr)) echo "selected"; ?>>
+                           <?= htmlspecialchars($name) ?>
+                        </option>
+                        <? } ?>
+                    </select>
+                </div>
+            </div>
         </div>
     </div>
-
-    <div class="row" style='padding-top: 5px;'>
-        <div class="col-lg-4 col-md-4 col-sm-4 col-xs-4 text-right">
-            <label class="MyLabelText">Phone</label>
-        </div>
-        <div class="col-lg-6 col-md-6 col-sm-6 col-xs-6">
-            <? GVTextBox("INPUT","txtPhone","txtPhone",$txtPhone,"","maxlength='10' placeholder='Phone'"); ?>
-        </div>
-    </div>
-
-    <div class="row" style='padding-top: 5px;'>
-        <div class="col-lg-4 col-md-4 col-sm-4 col-xs-4 text-right">
-            <label class="MyLabelText">Date of Birth</label>
-        </div>
-        <div class="col-lg-6 col-md-6 col-sm-6 col-xs-6">
-            <? GVTextBox("INPUT","txtDateOfBirth","txtDateOfBirth",$txtDateOfBirth,"","placeholder='YYYY-MM-DD'"); ?>
-        </div>
-    </div>
-
-    <div class="row" style='padding-top: 5px;'>
-        <div class="col-lg-4 col-md-4 col-sm-4 col-xs-4 text-right">
-            <label class="MyLabelText">Joining Date</label>
-        </div>
-        <div class="col-lg-6 col-md-6 col-sm-6 col-xs-6">
-            <? GVTextBox("INPUT","txtJoiningDate","txtJoiningDate",$txtJoiningDate,"","placeholder='YYYY-MM-DD'"); ?>
-        </div>
-    </div>
-
-    <div class="row" style='padding-top: 5px;'>
-        <div class="col-lg-4 col-md-4 col-sm-4 col-xs-4 text-right">
-            <label class="MyLabelText">Address</label>
-        </div>
-        <div class="col-lg-6 col-md-6 col-sm-6 col-xs-6">
-            <? GVTextArea("INPUT","txtAddress","txtAddress",$txtAddress,"","maxlength='35' placeholder='Address'",""); ?>
-        </div>
-    </div>
-
-    <div class="row" style='padding-top: 5px;'>
-        <div class="col-lg-4 col-md-4 col-sm-4 col-xs-4 text-right">
-            <label class="MyLabelText">City</label>
-        </div>
-        <div class="col-lg-6 col-md-6 col-sm-6 col-xs-6">
-            <? GVTextBox("INPUT","txtCity","txtCity",$txtCity,"","maxlength='35' placeholder='City'"); ?>
-        </div>
-    </div>
-
-    <div class="row" style='padding-top: 5px;'>
-        <div class="col-lg-4 col-md-4 col-sm-4 col-xs-4 text-right">
-            <label class="MyLabelText">State</label>
-        </div>
-        <div class="col-lg-6 col-md-6 col-sm-6 col-xs-6">
-            <? GVTextBox("INPUT","txtState","txtState",$txtState,"","maxlength='35' placeholder='State'"); ?>
-        </div>
-    </div>
-
-    <div class="row" style='padding-top: 5px;'>
-        <div class="col-lg-4 col-md-4 col-sm-4 col-xs-4 text-right">
-            <label class="MyLabelText">Pincode</label>
-        </div>
-        <div class="col-lg-6 col-md-6 col-sm-6 col-xs-6">
-            <? GVTextBox("INPUT","txtPincode","txtPincode",$txtPincode,"","maxlength='10' placeholder='Pincode'"); ?>
-        </div>
-    </div>
-
 </div>
 
 <? 
-$GVBackBtnInd = 1;
-$GVBackBtnVal = "CANCEL";
-$GVsaveBtnInd = 1;
-$GVSaveBtnVal = "SAVE";
-include("gv_popup_footer.html"); 
+	$GVsaveBtnInd = 1;
+	include("page_footer.html"); 
 ?>
+
+<script>
+$('#txtDateOfBirth').daterangepicker({ "singleDatePicker": true, locale: { format: 'DD-MM-YYYY' }});
+$('#txtJoiningDate').daterangepicker({ "singleDatePicker": true, locale: { format: 'DD-MM-YYYY' }});
+
+function toggleLoginEdit() {
+    var chk = document.getElementById("editLoginChk");
+    var section = document.getElementById("loginEditSection");
+
+    if (chk && section) {
+        section.style.display = chk.checked ? "block" : "none";
+    }
+}
+</script>
+
+
